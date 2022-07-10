@@ -1,14 +1,12 @@
 import assert from 'assert';
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { create, act } from 'react-test-renderer';
 
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Active, ActiveBoundary } from 'react-native-outside';
 import { EventProvider } from 'react-native-event';
 import { useRef } from 'react-ref-boundary';
 import { PortalProvider, Portal } from '@gorhom/portal';
-
-import visit from '../lib/visit';
 
 describe('react-native', function () {
   it('Active', async function () {
@@ -34,46 +32,55 @@ describe('react-native', function () {
       );
     });
 
-    const onPress = (event) => {
-      // emulate onStartShouldSetResponderCapture
-      event.persist = function () {
-        /* empty */
-      };
-      visit(toJSON(), (element) => {
-        if (element.props && element.props.onStartShouldSetResponderCapture)
-          element.props.onStartShouldSetResponderCapture(event);
-      });
-    };
-
-    const { getByTestId, getByText, toJSON } = await render(
-      <View>
-        <EventProvider>
-          <Active>
-            <Component />
-          </Active>
-        </EventProvider>
-        <View testID="outside" onPress={onPress} />
-      </View>,
+    const { root } = await act(() =>
+      create(
+        <View>
+          <EventProvider>
+            <Active>
+              <Component />
+            </Active>
+          </EventProvider>
+          <View
+            testID="outside"
+            onPress={() => {
+              /* empty */
+            }}
+          />
+        </View>,
+      ),
     );
 
     // inside
-    assert.ok(await getByText('not active'));
-    await fireEvent.press(getByTestId('toggle'), {
-      target: getByTestId('toggle'),
-    });
-    try {
-      await getByText('not active');
-      assert.ok(false);
-    } catch (err) {
-      assert.ok(err);
-    }
-    assert.ok(await getByText('active'));
+    assert.equal(
+      root.findByProps({ testID: 'text' }).props.children,
+      'not active',
+    );
+    act(() =>
+      root
+        .findByProps({ testID: 'toggle' })
+        .props.onPress({ target: root.findByProps({ testID: 'toggle' }) }),
+    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // outside
-    await fireEvent.press(getByTestId('outside'), {
-      target: getByTestId('outside'),
+    act(() => {
+      const event = {
+        target: root.findByProps({ testID: 'outside' }),
+        persist() {
+          /* empty */
+        },
+      };
+      root.findByProps({ testID: 'outside' }).props.onPress(event);
+      // emulate onStartShouldSetResponderCapture
+      root.findAll((node) => {
+        if (node.props && node.props.onStartShouldSetResponderCapture)
+          node.props.onStartShouldSetResponderCapture(event);
+      });
     });
-    assert.ok(await getByText('not active'));
+    assert.equal(
+      root.findByProps({ testID: 'text' }).props.children,
+      'not active',
+    );
   });
 
   it('ActiveBoundary', async function () {
@@ -115,53 +122,62 @@ describe('react-native', function () {
       );
     });
 
-    const onPress = (event) => {
-      // emulate onStartShouldSetResponderCapture
-      event.persist = function () {
-        /* empty */
-      };
-      visit(toJSON(), (element) => {
-        if (element.props && element.props.onStartShouldSetResponderCapture)
-          element.props.onStartShouldSetResponderCapture(event);
-      });
-    };
-
-    const { getByTestId, getByText, toJSON } = await render(
-      <PortalProvider>
-        <EventProvider>
-          <ActiveBoundary>
-            <Component />
-          </ActiveBoundary>
-        </EventProvider>
-        <TouchableOpacity
-          testID="outside"
-          onPress={function (event) {
-            // event.stopPropagation();
-            onPress(event);
-          }}
-        />
-      </PortalProvider>,
+    const { root } = await act(() =>
+      create(
+        <PortalProvider>
+          <EventProvider>
+            <ActiveBoundary>
+              <Component />
+            </ActiveBoundary>
+          </EventProvider>
+          <TouchableOpacity
+            testID="outside"
+            onPress={function () {
+              // event.stopPropagation();
+            }}
+          />
+        </PortalProvider>,
+      ),
     );
 
     // inside
-    assert.ok(await getByText('not active'));
-    fireEvent.press(getByTestId('toggle'), { target: getByTestId('toggle') });
-    try {
-      await getByText('not active');
-      assert.ok(false);
-    } catch (err) {
-      assert.ok(err);
-    }
-    assert.ok(await getByText('active'));
+    assert.equal(
+      root.findByProps({ testID: 'text' }).props.children,
+      'not active',
+    );
+    act(() =>
+      root
+        .findByProps({ testID: 'toggle' })
+        .props.onPress({ target: root.findByProps({ testID: 'toggle' }) }),
+    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
-    // portal
-    fireEvent.press(getByTestId('portal-click'), {
-      target: getByTestId('portal-click'),
-    });
-    assert.ok(await getByText('active'));
+    // inside
+    act(() =>
+      root.findByProps({ testID: 'portal-click' }).props.onPress({
+        target: root.findByProps({ testID: 'portal-click' }),
+      }),
+    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // outside
-    fireEvent.press(getByTestId('outside'), { target: getByTestId('outside') });
-    assert.ok(await getByText('not active'));
+    act(() => {
+      const event = {
+        target: root.findByProps({ testID: 'outside' }),
+        persist() {
+          /* empty */
+        },
+      };
+      root.findByProps({ testID: 'outside' }).props.onPress(event);
+      // emulate onStartShouldSetResponderCapture
+      root.findAll((node) => {
+        if (node.props && node.props.onStartShouldSetResponderCapture)
+          node.props.onStartShouldSetResponderCapture(event);
+      });
+    });
+    assert.equal(
+      root.findByProps({ testID: 'text' }).props.children,
+      'not active',
+    );
   });
 });
