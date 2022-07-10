@@ -64,7 +64,7 @@
     "react-native-event": "^0.2.1",
     "react-ref-boundary": "^0.1.2",
     "react-test-renderer": "18.0.0",
-    "ts-dev-stack": "^0.6.6"
+    "ts-dev-stack": "^0.6.7"
   },
   "peerDependencies": {
     "react": "*"
