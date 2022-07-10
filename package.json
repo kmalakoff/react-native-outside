@@ -60,7 +60,7 @@
     "jest": "^28.1.2",
     "metro-react-native-babel-preset": "^0.71.3",
     "react": "18.0.0",
-    "react-native": "0.69.0",
+    "react-native": "0.69.1",
     "react-native-contains": "^0.1.10",
     "react-native-event": "^0.2.1",
     "react-ref-boundary": "^0.1.2",
