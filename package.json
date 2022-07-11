@@ -54,7 +54,7 @@
     "@gorhom/portal": "^1.0.14",
     "@types/jest": "^28.1.4",
     "@types/react": "18.0.0",
-    "@types/react-native": "0.69.1",
+    "@types/react-native": "0.69.2",
     "cross-env": "^7.0.3",
     "jest": "^28.1.2",
     "metro-react-native-babel-preset": "^0.71.3",
