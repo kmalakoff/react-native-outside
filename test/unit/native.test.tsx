@@ -1,5 +1,6 @@
 import assert from 'assert';
-import React from 'react';
+import { forwardRef } from 'react';
+import { Dispatch, SetStateAction, RefObject } from 'react';
 import { create, act } from 'react-test-renderer';
 
 import { View, Text, TouchableOpacity } from 'react-native';
@@ -12,13 +13,10 @@ describe('react-native', function () {
   it('Active', async function () {
     type ComponentProps = {
       isActive?: boolean | undefined;
-      setIsActive?: React.Dispatch<React.SetStateAction<boolean>>;
+      setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = React.forwardRef(function (
-      { isActive, setIsActive }: ComponentProps,
-      ref: React.RefObject<View>,
-    ) {
+    const Component = forwardRef(function ({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) {
       return (
         <View ref={ref}>
           <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
@@ -46,20 +44,13 @@ describe('react-native', function () {
               /* empty */
             }}
           />
-        </View>,
-      ),
+        </View>
+      )
     );
 
     // inside
-    assert.equal(
-      root.findByProps({ testID: 'text' }).props.children,
-      'not active',
-    );
-    act(() =>
-      root
-        .findByProps({ testID: 'toggle' })
-        .props.onPress({ target: root.findByProps({ testID: 'toggle' }) }),
-    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
+    act(() => root.findByProps({ testID: 'toggle' }).props.onPress({ target: root.findByProps({ testID: 'toggle' }) }));
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // outside
@@ -73,20 +64,16 @@ describe('react-native', function () {
       root.findByProps({ testID: 'outside' }).props.onPress(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props && node.props.onStartShouldSetResponderCapture)
-          node.props.onStartShouldSetResponderCapture(event);
+        if (node.props && node.props.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
       });
     });
-    assert.equal(
-      root.findByProps({ testID: 'text' }).props.children,
-      'not active',
-    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
   });
 
   it('ActiveBoundary', async function () {
     type ComponentProps = {
       isActive?: boolean | undefined;
-      setIsActive?: React.Dispatch<React.SetStateAction<boolean>>;
+      setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
     function PortalComponent() {
@@ -104,10 +91,7 @@ describe('react-native', function () {
       );
     }
 
-    const Component = React.forwardRef(function (
-      { isActive, setIsActive }: ComponentProps,
-      ref: React.RefObject<View>,
-    ) {
+    const Component = forwardRef(function ({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) {
       return (
         <View ref={ref}>
           <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
@@ -136,27 +120,20 @@ describe('react-native', function () {
               // event.stopPropagation();
             }}
           />
-        </PortalProvider>,
-      ),
+        </PortalProvider>
+      )
     );
 
     // inside
-    assert.equal(
-      root.findByProps({ testID: 'text' }).props.children,
-      'not active',
-    );
-    act(() =>
-      root
-        .findByProps({ testID: 'toggle' })
-        .props.onPress({ target: root.findByProps({ testID: 'toggle' }) }),
-    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
+    act(() => root.findByProps({ testID: 'toggle' }).props.onPress({ target: root.findByProps({ testID: 'toggle' }) }));
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // inside
     act(() =>
       root.findByProps({ testID: 'portal-click' }).props.onPress({
         target: root.findByProps({ testID: 'portal-click' }),
-      }),
+      })
     );
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
@@ -171,13 +148,9 @@ describe('react-native', function () {
       root.findByProps({ testID: 'outside' }).props.onPress(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props && node.props.onStartShouldSetResponderCapture)
-          node.props.onStartShouldSetResponderCapture(event);
+        if (node.props && node.props.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
       });
     });
-    assert.equal(
-      root.findByProps({ testID: 'text' }).props.children,
-      'not active',
-    );
+    assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
   });
 });
