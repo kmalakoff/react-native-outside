@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
 export default function Active({ children }: {
     children: any;
-}): JSX.Element;
+}): import("react").FunctionComponentElement<{
+    children?: ReactNode;
+}>;

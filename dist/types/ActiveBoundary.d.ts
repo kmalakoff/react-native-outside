@@ -1,3 +1,3 @@
 export default function ActiveBoundary({ children }: {
     children: any;
-}): JSX.Element;
+}): import("react").FunctionComponentElement<import("react-ref-boundary").BoundaryProviderProps>;

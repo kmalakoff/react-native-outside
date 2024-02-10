@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, Fragment, Children, isValidElement, cloneElement, createElement } from 'react';
 import { useEvent } from 'react-native-event';
 import contains from 'react-native-contains';
 import { BoundaryProvider, useBoundary, useRef } from 'react-ref-boundary';
@@ -16,18 +16,18 @@ function Component({ children , isActive , setIsActive  }) {
         isActive,
         setIsActive
     ]);
-    return /*#__PURE__*/ React.createElement(React.Fragment, null, React.Children.map(children, (child)=>/*#__PURE__*/ React.isValidElement(child) ? /*#__PURE__*/ React.cloneElement(child, {
+    return createElement(Fragment, null, Children.map(children, (child)=>isValidElement(child) ? cloneElement(child, {
             isActive,
             setIsActive,
             ref
         }) : child));
 }
 export default function ActiveBoundary({ children  }) {
-    const state = React.useState(false);
+    const state = useState(false);
     const isActive = state[0];
     const setIsActive = state[1];
-    return /*#__PURE__*/ React.createElement(BoundaryProvider, null, /*#__PURE__*/ React.createElement(Component, {
-        isActive: isActive,
-        setIsActive: setIsActive
+    return createElement(BoundaryProvider, null, createElement(Component, {
+        isActive,
+        setIsActive
     }, children));
 };

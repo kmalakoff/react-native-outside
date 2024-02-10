@@ -11,14 +11,14 @@ function _export(target, all) {
 }
 _export(exports, {
     ActiveBoundary: function() {
-        return _activeBoundaryTsx.default;
+        return _activeBoundaryTs.default;
     },
     Active: function() {
-        return _activeTsx.default;
+        return _activeTs.default;
     }
 });
-var _activeBoundaryTsx = /*#__PURE__*/ _interopRequireDefault(require("./ActiveBoundary.js"));
-var _activeTsx = /*#__PURE__*/ _interopRequireDefault(require("./Active.js"));
+var _activeBoundaryTs = /*#__PURE__*/ _interopRequireDefault(require("./ActiveBoundary.js"));
+var _activeTs = /*#__PURE__*/ _interopRequireDefault(require("./Active.js"));
 function _interopRequireDefault(obj) {
     return obj && obj.__esModule ? obj : {
         default: obj

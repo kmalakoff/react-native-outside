@@ -1,11 +1,11 @@
-import React from 'react';
+import { useState, useRef, Fragment, Children, isValidElement, cloneElement, createElement } from 'react';
 import { useEvent } from 'react-native-event';
 import contains from 'react-native-contains';
 export default function Active({ children  }) {
-    const state = React.useState(false);
+    const state = useState(false);
     const isActive = state[0];
     const setIsActive = state[1];
-    const ref = React.useRef(null);
+    const ref = useRef(null);
     useEvent((event)=>{
         if (!isActive) return;
         if (ref.current && contains(ref.current, event.target)) return;
@@ -14,7 +14,7 @@ export default function Active({ children  }) {
         isActive,
         setIsActive
     ]);
-    return /*#__PURE__*/ React.createElement(React.Fragment, null, React.Children.map(children, (child)=>/*#__PURE__*/ React.isValidElement(child) ? /*#__PURE__*/ React.cloneElement(child, {
+    return createElement(Fragment, null, Children.map(children, (child)=>isValidElement(child) ? cloneElement(child, {
             isActive,
             setIsActive,
             ref

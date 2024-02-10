@@ -8,7 +8,7 @@ Object.defineProperty(exports, "default", {
         return ActiveBoundary;
     }
 });
-var _react = /*#__PURE__*/ _interopRequireDefault(require("react"));
+var _react = require("react");
 var _reactNativeEvent = require("react-native-event");
 var _reactNativeContains = /*#__PURE__*/ _interopRequireDefault(require("react-native-contains"));
 var _reactRefBoundary = require("react-ref-boundary");
@@ -32,8 +32,8 @@ function Component(param) {
         isActive,
         setIsActive
     ]);
-    return /*#__PURE__*/ _react.default.createElement(_react.default.Fragment, null, _react.default.Children.map(children, function(child) {
-        return /*#__PURE__*/ _react.default.isValidElement(child) ? /*#__PURE__*/ _react.default.cloneElement(child, {
+    return (0, _react.createElement)(_react.Fragment, null, _react.Children.map(children, function(child) {
+        return (0, _react.isValidElement)(child) ? (0, _react.cloneElement)(child, {
             isActive: isActive,
             setIsActive: setIsActive,
             ref: ref
@@ -42,10 +42,10 @@ function Component(param) {
 }
 function ActiveBoundary(param) {
     var children = param.children;
-    var state = _react.default.useState(false);
+    var state = (0, _react.useState)(false);
     var isActive = state[0];
     var setIsActive = state[1];
-    return /*#__PURE__*/ _react.default.createElement(_reactRefBoundary.BoundaryProvider, null, /*#__PURE__*/ _react.default.createElement(Component, {
+    return (0, _react.createElement)(_reactRefBoundary.BoundaryProvider, null, (0, _react.createElement)(Component, {
         isActive: isActive,
         setIsActive: setIsActive
     }, children));

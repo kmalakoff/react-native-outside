@@ -1,2 +1,2 @@
-export { default as ActiveBoundary } from './ActiveBoundary.tsx';
-export { default as Active } from './Active.tsx';
+export { default as ActiveBoundary } from './ActiveBoundary.ts';
+export { default as Active } from './Active.ts';
