@@ -1,11 +1,4 @@
 {
   "extends": "./node_modules/ts-dev-stack/config/.depcheckrc.json",
-  "ignores": [
-    "react-native-outside",
-    "@types/*",
-    "@typescript-eslint/*",
-    "eslint-*",
-    "jest-*",
-    "metro-*"
-  ]
+  "ignores": ["react-native-outside", "@types/*", "@typescript-eslint/*", "eslint-*", "jest-*", "metro-*"]
 }
