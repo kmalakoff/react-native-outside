@@ -35,13 +35,13 @@
     "build": "tsds build",
     "coverage": "tsds link && cross-env NODE_OPTIONS=--experimental-vm-modules jest test/**/*.test.* --collect-coverage",
     "deploy": "tsds deploy",
-    "format": "tsds format",
-    "lint": "tsds lint",
+    "format": "biome check --apply src/ test/",
     "test": "tsds link && cross-env NODE_OPTIONS=--experimental-vm-modules jest jest test/**/*.test.*",
     "test:engines": "nvu engines npm test",
     "version": "tsds version"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
     "@gorhom/portal": "^1.0.14",
     "@types/jest": "^29.5.12",
     "@types/react": "18.0.15",
@@ -55,7 +55,7 @@
     "react-native-event": "^0.2.1",
     "react-ref-boundary": "^0.1.2",
     "react-test-renderer": "18.0.0",
-    "ts-dev-stack": "^0.8.12"
+    "ts-dev-stack": "^0.9.3"
   },
   "peerDependencies": {
     "react": "*"
