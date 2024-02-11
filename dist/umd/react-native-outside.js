@@ -1,8 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('react-native-event'), require('react-native-contains'), require('react-ref-boundary')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'react', 'react-native-event', 'react-native-contains', 'react-ref-boundary'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.reactNativeOutside = {}, global.React, global.reactNativeEvent, global.reactNativeContains, global.reactRefBoundary));
-})(this, (function (exports, react, reactNativeEvent, contains, reactRefBoundary) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('react-native-contains'), require('react-native-event'), require('react-ref-boundary')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'react', 'react-native-contains', 'react-native-event', 'react-ref-boundary'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.reactNativeOutside = {}, global.React, global.reactNativeContains, global.reactNativeEvent, global.reactRefBoundary));
+})(this, (function (exports, react, contains, reactNativeEvent, reactRefBoundary) { 'use strict';
 
   function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 

@@ -1,6 +1,6 @@
-import { useState, useRef, Fragment, Children, isValidElement, cloneElement, createElement } from 'react';
-import { useEvent } from 'react-native-event';
+import { Children, Fragment, cloneElement, createElement, isValidElement, useRef, useState } from 'react';
 import contains from 'react-native-contains';
+import { useEvent } from 'react-native-event';
 export default function Active({ children  }) {
     const state = useState(false);
     const isActive = state[0];
