@@ -9,8 +9,8 @@ Object.defineProperty(exports, "default", {
     }
 });
 var _react = require("react");
-var _reactNativeEvent = require("react-native-event");
 var _reactNativeContains = /*#__PURE__*/ _interopRequireDefault(require("react-native-contains"));
+var _reactNativeEvent = require("react-native-event");
 var _reactRefBoundary = require("react-ref-boundary");
 function _interopRequireDefault(obj) {
     return obj && obj.__esModule ? obj : {
