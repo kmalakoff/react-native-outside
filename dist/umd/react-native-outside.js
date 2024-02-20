@@ -1,12 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('react-native-event'), require('react-native-contains'), require('react-ref-boundary')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'react', 'react-native-event', 'react-native-contains', 'react-ref-boundary'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.reactNativeOutside = {}, global.React, global.reactNativeEvent, global.reactNativeContains, global.reactRefBoundary));
-})(this, (function (exports, react, reactNativeEvent, contains, reactRefBoundary) { 'use strict';
-
-  function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
-
-  var contains__default = /*#__PURE__*/_interopDefaultLegacy(contains);
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react'), require('react-native-contains'), require('react-native-event'), require('react-ref-boundary')) :
+  typeof define === 'function' && define.amd ? define(['exports', 'react', 'react-native-contains', 'react-native-event', 'react-ref-boundary'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.reactNativeOutside = {}, global.React, global.reactNativeContains, global.reactNativeEvent, global.reactRefBoundary));
+})(this, (function (exports, react, contains, reactNativeEvent, reactRefBoundary) { 'use strict';
 
   function Component(param) {
       var children = param.children, isActive = param.isActive, setIsActive = param.setIsActive;
@@ -16,7 +12,7 @@
           if (!isActive) return;
           for(var i = 0; i < boundary.refs.length; i++){
               var x = boundary.refs[i];
-              if (x.current && contains__default["default"](x.current, event.target)) return;
+              if (x.current && contains(x.current, event.target)) return;
           }
           setIsActive(false);
       }, [
@@ -50,7 +46,7 @@
       var ref = react.useRef(null);
       reactNativeEvent.useEvent(function(event) {
           if (!isActive) return;
-          if (ref.current && contains__default["default"](ref.current, event.target)) return;
+          if (ref.current && contains(ref.current, event.target)) return;
           setIsActive(false);
       }, [
           isActive,
@@ -67,8 +63,6 @@
 
   exports.Active = Active;
   exports.ActiveBoundary = ActiveBoundary;
-
-  Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 //# sourceMappingURL=react-native-outside.js.map

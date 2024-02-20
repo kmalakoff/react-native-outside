@@ -9,9 +9,9 @@ Object.defineProperty(exports, "default", {
     }
 });
 var _react = require("react");
-var _reactNativeEvent = require("react-native-event");
-var _reactNativeContains = /*#__PURE__*/ _interopRequireDefault(require("react-native-contains"));
-function _interopRequireDefault(obj) {
+var _reactnativecontains = /*#__PURE__*/ _interop_require_default(require("react-native-contains"));
+var _reactnativeevent = require("react-native-event");
+function _interop_require_default(obj) {
     return obj && obj.__esModule ? obj : {
         default: obj
     };
@@ -22,9 +22,9 @@ function Active(param) {
     var isActive = state[0];
     var setIsActive = state[1];
     var ref = (0, _react.useRef)(null);
-    (0, _reactNativeEvent.useEvent)(function(event) {
+    (0, _reactnativeevent.useEvent)(function(event) {
         if (!isActive) return;
-        if (ref.current && (0, _reactNativeContains.default)(ref.current, event.target)) return;
+        if (ref.current && (0, _reactnativecontains.default)(ref.current, event.target)) return;
         setIsActive(false);
     }, [
         isActive,
@@ -38,9 +38,4 @@ function Active(param) {
         }) : child;
     }));
 }
-
-if ((typeof exports.default === 'function' || (typeof exports.default === 'object' && exports.default !== null)) && typeof exports.default.__esModule === 'undefined') {
-  Object.defineProperty(exports.default, '__esModule', { value: true });
-  for (var key in exports) exports.default[key] = exports[key];
-  module.exports = exports.default;
-}
+/* CJS INTEROP */ if (exports.__esModule && exports.default) { Object.defineProperty(exports.default, '__esModule', { value: true }); for (var key in exports) exports.default[key] = exports[key]; module.exports = exports.default; }
