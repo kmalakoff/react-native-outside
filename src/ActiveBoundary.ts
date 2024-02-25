@@ -1,13 +1,8 @@
-import { useState, Fragment, Children, isValidElement, cloneElement, createElement } from 'react';
-import type { RefObject, ReactElement, FC, Dispatch, ReactNode } from 'react';
-import { useEvent } from 'react-native-event';
+import { Children, Fragment, cloneElement, createElement, isValidElement, useState } from 'react';
+import type { Dispatch, FC, ReactElement, ReactNode, RefObject } from 'react';
 import contains from 'react-native-contains';
+import { useEvent } from 'react-native-event';
 import { BoundaryProvider, useBoundary, useRef } from 'react-ref-boundary';
-
-interface ComponentProps {
-  isActive: boolean;
-  setIsActive: Dispatch<boolean>;
-}
 
 function Component({ children, isActive, setIsActive }) {
   const ref = useRef<HTMLElement>(null);
@@ -29,7 +24,8 @@ function Component({ children, isActive, setIsActive }) {
     null,
     Children.map<ReactNode, ReactNode>(children, (child) =>
       isValidElement(child)
-        ? cloneElement(child as ReactElement<any>, {
+        ? // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          cloneElement(child as ReactElement<any>, {
             isActive,
             setIsActive,
             ref,
@@ -37,6 +33,11 @@ function Component({ children, isActive, setIsActive }) {
         : child
     )
   );
+}
+
+interface ComponentProps {
+  isActive: boolean;
+  setIsActive: Dispatch<boolean>;
 }
 
 export default function ActiveBoundary({ children }) {

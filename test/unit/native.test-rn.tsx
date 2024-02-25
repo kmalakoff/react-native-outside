@@ -1,34 +1,36 @@
+// @ts-ignore
+global.IS_REACT_ACT_ENVIRONMENT = true;
+
 import assert from 'assert';
 import { forwardRef } from 'react';
-import { Dispatch, SetStateAction, RefObject } from 'react';
-import { create, act } from 'react-test-renderer';
+import React, { Dispatch, RefObject, SetStateAction } from 'react';
+import { act, create } from 'react-test-renderer';
 
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Active, ActiveBoundary } from 'react-native-outside';
+import { Portal, PortalProvider } from '@gorhom/portal';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider } from 'react-native-event';
+// @ts-ignore
+import { Active, ActiveBoundary } from 'react-native-outside';
 import { useRef } from 'react-ref-boundary';
-import { PortalProvider, Portal } from '@gorhom/portal';
 
-describe('react-native', function () {
-  it('Active', async function () {
+describe('react-native', () => {
+  it('Active', async () => {
     type ComponentProps = {
       isActive?: boolean | undefined;
       setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = forwardRef(function ({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) {
-      return (
-        <View ref={ref}>
-          <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
-          <TouchableOpacity
-            testID="toggle"
-            onPress={function () {
-              setIsActive(!isActive);
-            }}
-          />
-        </View>
-      );
-    });
+    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+      <View ref={ref}>
+        <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
+        <TouchableOpacity
+          testID="toggle"
+          onPress={() => {
+            setIsActive(!isActive);
+          }}
+        />
+      </View>
+    ));
 
     const { root } = await act(() =>
       create(
@@ -38,7 +40,7 @@ describe('react-native', function () {
               <Component />
             </Active>
           </EventProvider>
-          <View
+          <TouchableOpacity
             testID="outside"
             onPress={() => {
               /* empty */
@@ -70,7 +72,7 @@ describe('react-native', function () {
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
   });
 
-  it('ActiveBoundary', async function () {
+  it('ActiveBoundary', async () => {
     type ComponentProps = {
       isActive?: boolean | undefined;
       setIsActive?: Dispatch<SetStateAction<boolean>>;
@@ -83,7 +85,7 @@ describe('react-native', function () {
           <TouchableOpacity
             ref={ref}
             testID="portal-click"
-            onPress={function () {
+            onPress={() => {
               // event.stopPropagation();
             }}
           />
@@ -91,20 +93,18 @@ describe('react-native', function () {
       );
     }
 
-    const Component = forwardRef(function ({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) {
-      return (
-        <View ref={ref}>
-          <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
-          <TouchableOpacity
-            testID="toggle"
-            onPress={function () {
-              setIsActive(!isActive);
-            }}
-          />
-          <PortalComponent />
-        </View>
-      );
-    });
+    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+      <View ref={ref}>
+        <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
+        <TouchableOpacity
+          testID="toggle"
+          onPress={() => {
+            setIsActive(!isActive);
+          }}
+        />
+        <PortalComponent />
+      </View>
+    ));
 
     const { root } = await act(() =>
       create(
@@ -116,7 +116,7 @@ describe('react-native', function () {
           </EventProvider>
           <TouchableOpacity
             testID="outside"
-            onPress={function () {
+            onPress={() => {
               // event.stopPropagation();
             }}
           />
