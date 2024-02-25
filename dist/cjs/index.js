@@ -10,23 +10,18 @@ function _export(target, all) {
     });
 }
 _export(exports, {
-    ActiveBoundary: function() {
-        return _activeBoundaryTs.default;
-    },
     Active: function() {
-        return _activeTs.default;
+        return _Activets.default;
+    },
+    ActiveBoundary: function() {
+        return _ActiveBoundaryts.default;
     }
 });
-var _activeBoundaryTs = /*#__PURE__*/ _interopRequireDefault(require("./ActiveBoundary.js"));
-var _activeTs = /*#__PURE__*/ _interopRequireDefault(require("./Active.js"));
-function _interopRequireDefault(obj) {
+var _ActiveBoundaryts = /*#__PURE__*/ _interop_require_default(require("./ActiveBoundary.js"));
+var _Activets = /*#__PURE__*/ _interop_require_default(require("./Active.js"));
+function _interop_require_default(obj) {
     return obj && obj.__esModule ? obj : {
         default: obj
     };
 }
-
-if ((typeof exports.default === 'function' || (typeof exports.default === 'object' && exports.default !== null)) && typeof exports.default.__esModule === 'undefined') {
-  Object.defineProperty(exports.default, '__esModule', { value: true });
-  for (var key in exports) exports.default[key] = exports[key];
-  module.exports = exports.default;
-}
+/* CJS INTEROP */ if (exports.__esModule && exports.default) { Object.defineProperty(exports.default, '__esModule', { value: true }); for (var key in exports) exports.default[key] = exports[key]; module.exports = exports.default; }
