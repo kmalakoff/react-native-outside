@@ -3,7 +3,7 @@ global.IS_REACT_ACT_ENVIRONMENT = true;
 
 import assert from 'assert';
 import { forwardRef } from 'react';
-import React, { Dispatch, RefObject, SetStateAction } from 'react';
+import React, { type Dispatch, type RefObject, type SetStateAction } from 'react';
 import { act, create } from 'react-test-renderer';
 
 import { Portal, PortalProvider } from '@gorhom/portal';
