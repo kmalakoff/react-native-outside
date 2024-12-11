@@ -6,7 +6,7 @@ For a react-dom version, check out [react-dom-outside](https://www.npmjs.com/pac
 
 ### Example 1: Active Component
 
-```jsx
+```tsx
 import { forwardRef } from "react",
 import { View } from "react-native",
 import { Active } from "react-native-outside";
@@ -42,7 +42,7 @@ export default function App() {
 
 ### Example 1: Active Boundary Component
 
-```jsx
+```tsx
 import { forwardRef } from "react",
 import { View } from "react-native",
 import { Active } from "react-native-outside";
