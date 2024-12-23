@@ -44,7 +44,7 @@
     "@gorhom/portal": "^1.0.14",
     "@types/mocha": "^10.0.10",
     "@types/react": "^18.3.1",
-    "react": "^18.3.1",
+    "react": "^19.0.0",
     "react-native": "^0.76.5",
     "react-native-contains": "^0.1.11",
     "react-native-event": "^0.2.4",
