@@ -1,1 +1,1 @@
-ignores: ["react-native-outside", "depcheck", "ts-dev-stack",  "@types/*", "@biomejs/*", "react", "react-*"]
+ignores: ["react-native-outside", "depcheck", "ts-swc-loaders",  "@types/*", "@biomejs/*", "react", "react-*"]
