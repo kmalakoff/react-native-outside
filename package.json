@@ -50,7 +50,7 @@
     "react-native-event": "^0.2.4",
     "react-native-web": "^0.19.13",
     "react-ref-boundary": "^0.1.4",
-    "react-test-renderer": "^18.3.1",
+    "react-test-renderer": "^19.0.0",
     "ts-swc-loaders": "^1.5.0"
   },
   "peerDependencies": {
