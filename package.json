@@ -19,12 +19,12 @@
   "exports": {
     ".": {
       "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.js",
+      "require": "./dist/cjs/index.cjs",
       "types": "./dist/types/index.d.ts"
     },
     "./*": "./*"
   },
-  "main": "dist/cjs/index.js",
+  "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.mjs",
   "types": "dist/types/index.d.ts",
   "files": [
@@ -33,25 +33,26 @@
   "scripts": {
     "build": "tsds build",
     "deploy": "tsds deploy",
-    "format": "biome check --apply-unsafe src/ test/",
-    "test": "npm run test:rn",
+    "docs": "tsds docs",
+    "format": "biome check --write --unsafe src/ test/",
+    "test": "tsds test:browser --config wtr.config.mjs",
     "test:engines": "nvu engines npm test",
-    "test:rn": "tsds link && ts-swc mocha --watch-extensions ts,tsx test/**/*.test-rn.* --loader=./test/lib/alias-rnw.mjs && tsds unlink",
     "version": "tsds version"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.5.3",
+    "@biomejs/biome": "^1.9.4",
     "@gorhom/portal": "^1.0.14",
-    "@types/mocha": "^10.0.6",
-    "@types/react": "^18.2.58",
-    "react": "^18.2.0",
-    "react-native": "^0.73.4",
+    "@types/mocha": "^10.0.10",
+    "@types/react": "^18.3.1",
+    "@web/dev-server-import-maps": "^0.2.1",
+    "react": "^18.3.1",
+    "react-native": "^0.76.5",
     "react-native-contains": "^0.1.11",
     "react-native-event": "^0.2.4",
-    "react-native-web": "^0.19.10",
+    "react-native-web": "^0.19.13",
     "react-ref-boundary": "^0.1.4",
-    "react-test-renderer": "^18.2.0",
-    "ts-dev-stack": "^0.15.8"
+    "react-test-renderer": "^18.3.1",
+    "tsds-web-test-runner": "^1.11.15"
   },
   "peerDependencies": {
     "react": "*",
@@ -64,10 +65,6 @@
     "node": ">=16"
   },
   "tsds": {
-    "source": "src/index.ts",
-    "targets": [
-      "cjs",
-      "esm"
-    ]
+    "source": "src/index.ts"
   }
 }
