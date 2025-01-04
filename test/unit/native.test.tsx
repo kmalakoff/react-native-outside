@@ -1,9 +1,8 @@
 // @ts-ignore
-global.IS_REACT_ACT_ENVIRONMENT = true;
-
+(typeof global === 'undefined' ? window : global).IS_REACT_ACT_ENVIRONMENT = true;
 import assert from 'assert';
 import { forwardRef } from 'react';
-import React, { Dispatch, RefObject, SetStateAction } from 'react';
+import React, { type Dispatch, type RefObject, type SetStateAction } from 'react';
 import { act, create } from 'react-test-renderer';
 
 import { Portal, PortalProvider } from '@gorhom/portal';
@@ -66,7 +65,7 @@ describe('react-native', () => {
       root.findByProps({ testID: 'outside' }).props.onPress(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props && node.props.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
+        if (node.props?.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
       });
     });
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
@@ -148,7 +147,7 @@ describe('react-native', () => {
       root.findByProps({ testID: 'outside' }).props.onPress(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props && node.props.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
+        if (node.props?.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
       });
     });
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
