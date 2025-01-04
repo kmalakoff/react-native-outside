@@ -3,9 +3,14 @@ updates:
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
     ignore:
-      - dependency-name: "react-native"
+       - dependency-name: '@types/react'
+      - dependency-name: '@types/react-dom'
+      - dependency-name: 'react'
+      - dependency-name: 'react-dom'
+      - dependency-name: 'react-test-renderer'
+      - dependency-name: 'react-native'      
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
