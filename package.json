@@ -48,12 +48,12 @@
     "@web/dev-server-import-maps": "^0.2.1",
     "react": "^18.3.1",
     "react-native": "^0.76.5",
-    "react-native-contains": "^0.1.17",
-    "react-native-event": "^0.2.10",
+    "react-native-contains": "^0.1.18",
+    "react-native-event": "^0.2.12",
     "react-native-web": "^0.19.13",
-    "react-ref-boundary": "^0.1.10",
+    "react-ref-boundary": "^0.1.12",
     "react-test-renderer": "^18.3.1",
-    "tsds-web-test-runner": "^1.13.6"
+    "tsds-web-test-runner": "^1.13.14"
   },
   "peerDependencies": {
     "react": "*",
