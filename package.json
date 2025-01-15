@@ -44,7 +44,7 @@
     "@gorhom/portal": "*",
     "@types/mocha": "*",
     "@types/node": "*",
-    "@types/react": "*",
+    "@types/react": "^18.3.1",
     "@web/dev-server-import-maps": "*",
     "react": "^18.3.1",
     "react-native": "*",
@@ -56,7 +56,7 @@
     "tsds-web-test-runner": "*"
   },
   "peerDependencies": {
-    "react": "^18.3.1",
+    "react": "*",
     "react-native": "*",
     "react-native-contains": "*",
     "react-native-event": "*",
