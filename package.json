@@ -43,15 +43,15 @@
     "@gorhom/portal": "*",
     "@types/mocha": "*",
     "@types/node": "*",
-    "@types/react": "*",
+    "@types/react": "^18.3.1",
     "@web/dev-server-import-maps": "*",
-    "react": "*",
+    "react": "^18.3.1",
     "react-native": "*",
     "react-native-contains": "*",
     "react-native-event": "*",
     "react-native-web": "*",
     "react-ref-boundary": "*",
-    "react-test-renderer": "*",
+    "react-test-renderer": "^18.3.1",
     "tsds-web-test-runner": "*"
   },
   "peerDependencies": {
@@ -63,24 +63,6 @@
   },
   "engines": {
     "node": ">=16"
-  },
-  "overrides": {
-    "react-native": {
-      "@types/react": "latest",
-      "react": "latest"
-    },
-    "react-native-web": {
-      "@types/react": "latest",
-      "@types/react-dom": "latest",
-      "react": "latest",
-      "react-dom": "latest"
-    },
-    "@react-native/virtualized-lists": {
-      "@types/react": "latest",
-      "@types/react-dom": "latest",
-      "react": "latest",
-      "react-dom": "latest"
-    }
   },
   "tsds": {
     "source": "src/index.ts"
