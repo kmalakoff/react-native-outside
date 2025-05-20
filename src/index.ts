@@ -1,2 +1,2 @@
-export { default as ActiveBoundary } from './ActiveBoundary';
-export { default as Active } from './Active';
+export { default as ActiveBoundary } from './ActiveBoundary.js';
+export { default as Active } from './Active.js';
