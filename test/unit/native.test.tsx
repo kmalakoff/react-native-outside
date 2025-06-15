@@ -1,8 +1,8 @@
 // @ts-ignore
 (typeof global === 'undefined' ? window : global).IS_REACT_ACT_ENVIRONMENT = true;
 import assert from 'assert';
-import { forwardRef } from 'react';
-import React, { type Dispatch, type RefObject, type SetStateAction } from 'react';
+import React from 'react';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
 import { act, create } from 'react-test-renderer';
 
 import { Portal, PortalProvider } from '@gorhom/portal';
@@ -19,7 +19,7 @@ describe('react-native', () => {
       setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
@@ -92,7 +92,7 @@ describe('react-native', () => {
       );
     }
 
-    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
