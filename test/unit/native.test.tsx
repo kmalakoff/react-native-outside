@@ -1,16 +1,16 @@
 // @ts-ignore
 (typeof global === 'undefined' ? window : global).IS_REACT_ACT_ENVIRONMENT = true;
-import assert from 'assert';
-import { forwardRef } from 'react';
-import React, { type Dispatch, type RefObject, type SetStateAction } from 'react';
-import { act, create } from 'react-test-renderer';
 
 import { Portal, PortalProvider } from '@gorhom/portal';
+import assert from 'assert';
+import type { Dispatch, RefObject, SetStateAction } from 'react';
+import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider } from 'react-native-event';
 // @ts-ignore
 import { Active, ActiveBoundary } from 'react-native-outside';
 import { useRef } from 'react-ref-boundary';
+import { act, create } from 'react-test-renderer';
 
 describe('react-native', () => {
   it('Active', async () => {
@@ -19,7 +19,7 @@ describe('react-native', () => {
       setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
@@ -92,7 +92,7 @@ describe('react-native', () => {
       );
     }
 
-    const Component = forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
