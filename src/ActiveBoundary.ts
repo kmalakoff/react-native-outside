@@ -1,5 +1,5 @@
-import { Children, Fragment, cloneElement, createElement, isValidElement, useState } from 'react';
-import type { Dispatch, FC, ReactElement, ReactNode, RefObject } from 'react';
+import type { Attributes, Dispatch, FC, ReactNode, RefObject } from 'react';
+import { Children, cloneElement, createElement, Fragment, isValidElement, useState } from 'react';
 import contains from 'react-native-contains';
 import { useEvent } from 'react-native-event';
 import { BoundaryProvider, useBoundary, useRef } from 'react-ref-boundary';
@@ -24,12 +24,11 @@ function Component({ children, isActive, setIsActive }) {
     null,
     Children.map<ReactNode, ReactNode>(children, (child) =>
       isValidElement(child)
-        ? // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          cloneElement(child as ReactElement<any>, {
+        ? cloneElement(child, {
             isActive,
             setIsActive,
             ref,
-          })
+          } as Attributes)
         : child
     )
   );
