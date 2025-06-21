@@ -39,7 +39,9 @@ interface ComponentProps {
   setIsActive: Dispatch<boolean>;
 }
 
-export default function ActiveBoundary({ children }) {
+import type { ActiveBoundaryProps } from './types.ts';
+
+export default function ActiveBoundary({ children }: ActiveBoundaryProps) {
   const state = useState<boolean>(false);
   const isActive = state[0];
   const setIsActive = state[1];
