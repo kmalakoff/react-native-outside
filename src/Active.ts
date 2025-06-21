@@ -3,7 +3,9 @@ import { Children, cloneElement, createElement, Fragment, isValidElement, useRef
 import contains from 'react-native-contains';
 import { useEvent } from 'react-native-event';
 
-export default function Active({ children }) {
+import type { ActiveProps } from './types.ts';
+
+export default function Active({ children }: ActiveProps) {
   const state = useState<boolean>(false);
   const isActive = state[0];
   const setIsActive = state[1];
