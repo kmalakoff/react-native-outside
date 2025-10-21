@@ -1,5 +1,4 @@
 import assert from 'assert';
-// @ts-ignore
 import { Active, ActiveBoundary } from 'react-native-outside';
 
 describe('exports .mjs', () => {

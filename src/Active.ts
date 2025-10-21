@@ -1,6 +1,6 @@
 import type { Attributes, ReactNode } from 'react';
 import { Children, cloneElement, createElement, Fragment, isValidElement, useRef, useState } from 'react';
-import contains from 'react-native-contains';
+import contains, { type NativeElement } from 'react-native-contains';
 import { useEvent } from 'react-native-event';
 
 import type { ActiveProps } from './types.ts';
@@ -13,7 +13,7 @@ export default function Active({ children }: ActiveProps) {
   useEvent(
     (event) => {
       if (!isActive) return;
-      if (ref.current && contains(ref.current, event.target)) return;
+      if (ref.current && contains(ref.current, event.target as unknown as NativeElement)) return;
       setIsActive(false);
     },
     [isActive, setIsActive]

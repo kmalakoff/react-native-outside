@@ -1,18 +1,18 @@
 import type { Attributes, Dispatch, FC, ReactNode, RefObject } from 'react';
 import { Children, cloneElement, createElement, Fragment, isValidElement, useState } from 'react';
-import contains from 'react-native-contains';
+import contains, { type NativeElement } from 'react-native-contains';
 import { useEvent } from 'react-native-event';
 import { BoundaryProvider, useBoundary, useRef } from 'react-ref-boundary';
 
 function Component({ children, isActive, setIsActive }) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<NativeElement>(null);
   const boundary = useBoundary();
   useEvent(
     (event) => {
       if (!isActive) return;
       for (let i = 0; i < boundary.refs.length; i++) {
-        const x = boundary.refs[i] as RefObject<HTMLElement>;
-        if (x.current && contains(x.current, event.target)) return;
+        const x = boundary.refs[i] as RefObject<NativeElement>;
+        if (x.current && contains(x.current, event.target as unknown as NativeElement)) return;
       }
       setIsActive(false);
     },
