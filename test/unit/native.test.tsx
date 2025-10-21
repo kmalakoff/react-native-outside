@@ -1,4 +1,3 @@
-// @ts-ignore
 (typeof global === 'undefined' ? window : global).IS_REACT_ACT_ENVIRONMENT = true;
 
 import { Portal, PortalProvider } from '@gorhom/portal';
@@ -7,7 +6,6 @@ import type { Dispatch, RefObject, SetStateAction } from 'react';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider } from 'react-native-event';
-// @ts-ignore
 import { Active, ActiveBoundary } from 'react-native-outside';
 import { useRef } from 'react-ref-boundary';
 import { act, create } from 'react-test-renderer';
