@@ -35,14 +35,13 @@
   "scripts": {
     "build": "tsds build",
     "docs": "tsds docs",
-    "format": "biome check --write --unsafe",
+    "format": "tsds format",
     "prepublishOnly": "tsds validate",
     "test": "tsds test:browser --config wtr.config.mjs",
     "test:engines": "tsds test:browser --config wtr.config.mjs",
     "version": "tsds version"
   },
   "devDependencies": {
-    "@biomejs/biome": "*",
     "@gorhom/portal": "*",
     "@types/mocha": "*",
     "@types/node": "*",
@@ -56,6 +55,7 @@
     "react-ref-boundary": "*",
     "react-test-renderer": "*",
     "ts-dev-stack": "*",
+    "tsds-config": "*",
     "tsds-web-test-runner": "*"
   },
   "peerDependencies": {
