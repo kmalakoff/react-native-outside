@@ -42,28 +42,28 @@
     "version": "tsds version"
   },
   "devDependencies": {
-    "@gorhom/portal": "*",
-    "@types/mocha": "*",
-    "@types/node": "*",
-    "@types/react": "*",
-    "@web/dev-server-import-maps": "*",
-    "node-version-use": "*",
-    "react": "*",
-    "react-native": "*",
-    "react-native-contains": "*",
-    "react-native-event": "*",
-    "react-ref-boundary": "*",
-    "react-test-renderer": "*",
-    "ts-dev-stack": "*",
-    "tsds-config": "*",
-    "tsds-web-test-runner": "*"
+    "@gorhom/portal": "^1.0.14",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.0.1",
+    "@types/react": "^19.2.7",
+    "@web/dev-server-import-maps": "^0.2.1",
+    "node-version-use": "^2.1.5",
+    "react": "^19.2.3",
+    "react-native": "^0.83.0",
+    "react-native-contains": "^1.0.8",
+    "react-native-event": "^1.0.7",
+    "react-ref-boundary": "^1.0.7",
+    "react-test-renderer": "^19.2.3",
+    "ts-dev-stack": "^1.21.3",
+    "tsds-config": "^0.2.1",
+    "tsds-web-test-runner": "^1.19.4"
   },
   "peerDependencies": {
-    "react": "*",
-    "react-native": "*",
-    "react-native-contains": "*",
-    "react-native-event": "*",
-    "react-ref-boundary": "*"
+    "react": "^19.2.1",
+    "react-native": "^0.82.1",
+    "react-native-contains": "^1.0.8",
+    "react-native-event": "^1.0.7",
+    "react-ref-boundary": "^1.0.7"
   },
   "engines": {
     "node": ">=16"
