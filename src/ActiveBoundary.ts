@@ -4,8 +4,14 @@ import contains, { type NativeElement } from 'react-native-contains';
 import { useEvent } from 'react-native-event';
 import { BoundaryProvider, useBoundary, useRef } from 'react-ref-boundary';
 
-function Component({ children, isActive, setIsActive }) {
-  const ref = useRef<NativeElement>(null);
+interface ComponentProps {
+  children?: ReactNode;
+  isActive: boolean;
+  setIsActive: Dispatch<boolean>;
+}
+
+function Component({ children, isActive, setIsActive }: ComponentProps) {
+  const ref = useRef<NativeElement | null>(null);
   const boundary = useBoundary();
   useEvent(
     (event) => {
@@ -32,11 +38,6 @@ function Component({ children, isActive, setIsActive }) {
         : child
     )
   );
-}
-
-interface ComponentProps {
-  isActive: boolean;
-  setIsActive: Dispatch<boolean>;
 }
 
 import type { ActiveBoundaryProps } from './types.ts';

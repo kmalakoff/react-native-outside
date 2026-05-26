@@ -1,8 +1,8 @@
-(typeof global === 'undefined' ? window : global).IS_REACT_ACT_ENVIRONMENT = true;
+((typeof global === 'undefined' ? window : global) as unknown as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 import { Portal, PortalProvider } from '@gorhom/portal';
 import assert from 'assert';
-import type { Dispatch, RefObject, SetStateAction } from 'react';
+import type { Dispatch, ForwardedRef, SetStateAction } from 'react';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider } from 'react-native-event';
@@ -17,13 +17,13 @@ describe('react-native', () => {
       setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
           testID="toggle"
           onPress={() => {
-            setIsActive(!isActive);
+            setIsActive?.(!isActive);
           }}
         />
       </View>
@@ -49,7 +49,7 @@ describe('react-native', () => {
 
     // inside
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
-    act(() => root.findByProps({ testID: 'toggle' }).props.onPress({ target: root.findByProps({ testID: 'toggle' }) }));
+    act(() => (root.findByProps({ testID: 'toggle' }).props.onPress as (e: unknown) => void)({ target: root.findByProps({ testID: 'toggle' }) }));
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // outside
@@ -60,10 +60,11 @@ describe('react-native', () => {
           /* empty */
         },
       };
-      root.findByProps({ testID: 'outside' }).props.onPress(event);
+      (root.findByProps({ testID: 'outside' }).props.onPress as (e: unknown) => void)(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props?.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
+        if (node.props?.onStartShouldSetResponderCapture) (node.props.onStartShouldSetResponderCapture as (e: unknown) => void)(event);
+        return false;
       });
     });
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
@@ -90,13 +91,13 @@ describe('react-native', () => {
       );
     }
 
-    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: RefObject<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<View>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
           testID="toggle"
           onPress={() => {
-            setIsActive(!isActive);
+            setIsActive?.(!isActive);
           }}
         />
         <PortalComponent />
@@ -123,12 +124,12 @@ describe('react-native', () => {
 
     // inside
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
-    act(() => root.findByProps({ testID: 'toggle' }).props.onPress({ target: root.findByProps({ testID: 'toggle' }) }));
+    act(() => (root.findByProps({ testID: 'toggle' }).props.onPress as (e: unknown) => void)({ target: root.findByProps({ testID: 'toggle' }) }));
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'active');
 
     // inside
     act(() =>
-      root.findByProps({ testID: 'portal-click' }).props.onPress({
+      (root.findByProps({ testID: 'portal-click' }).props.onPress as (e: unknown) => void)({
         target: root.findByProps({ testID: 'portal-click' }),
       })
     );
@@ -142,10 +143,11 @@ describe('react-native', () => {
           /* empty */
         },
       };
-      root.findByProps({ testID: 'outside' }).props.onPress(event);
+      (root.findByProps({ testID: 'outside' }).props.onPress as (e: unknown) => void)(event);
       // emulate onStartShouldSetResponderCapture
       root.findAll((node) => {
-        if (node.props?.onStartShouldSetResponderCapture) node.props.onStartShouldSetResponderCapture(event);
+        if (node.props?.onStartShouldSetResponderCapture) (node.props.onStartShouldSetResponderCapture as (e: unknown) => void)(event);
+        return false;
       });
     });
     assert.equal(root.findByProps({ testID: 'text' }).props.children, 'not active');
