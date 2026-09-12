@@ -2,7 +2,7 @@
 
 import { Portal, PortalProvider } from '@gorhom/portal';
 import assert from 'assert';
-import type { Dispatch, ForwardedRef, SetStateAction } from 'react';
+import type { ComponentRef, Dispatch, ForwardedRef, SetStateAction } from 'react';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider } from 'react-native-event';
@@ -17,7 +17,7 @@ describe('react-native', () => {
       setIsActive?: Dispatch<SetStateAction<boolean>>;
     };
 
-    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<ComponentRef<typeof View>>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
@@ -91,7 +91,7 @@ describe('react-native', () => {
       );
     }
 
-    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<View>) => (
+    const Component = React.forwardRef(({ isActive, setIsActive }: ComponentProps, ref: ForwardedRef<ComponentRef<typeof View>>) => (
       <View ref={ref}>
         <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
         <TouchableOpacity
