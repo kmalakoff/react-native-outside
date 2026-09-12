@@ -1,14 +1,20 @@
-## react-native-outside
+# react-native-outside
 
 React components for react-native click outside
 
+```sh
+npm install react-native-outside react-native-event react-native-contains react-ref-boundary
+```
+
+The examples assume React Native 0.82 or newer, React, and Node.js 16 or newer.
+
 For a react-dom version, check out [react-dom-outside](https://www.npmjs.com/package/react-dom-outside)
 
-### Example 1: Active Component
+### Active component
 
 ```tsx
-import { forwardRef } from "react",
-import { View } from "react-native",
+import { forwardRef } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import { Active } from "react-native-outside";
 import { EventProvider } from "react-native-event";
 
@@ -40,12 +46,18 @@ export default function App() {
 }
 ```
 
-### Example 1: Active Boundary Component
+### Active boundary component
+
+For content rendered through a portal, install the portal provider used by this example:
+
+```sh
+npm install @gorhom/portal
+```
 
 ```tsx
-import { forwardRef } from "react",
-import { View } from "react-native",
-import { Active } from "react-native-outside";
+import { forwardRef } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import { ActiveBoundary } from "react-native-outside";
 import { EventProvider } from "react-native-event";
 import { PortalProvider, Portal } from '@gorhom/portal';
 import { useRef as useBoundaryRef } from 'react-ref-boundary';
@@ -82,14 +94,13 @@ const Component = forwardRef(({ isActive, setIsActive }, ref) => {
 
 export default function App() {
   return (
-    <EventProvider>
-      <Active>
-        <Component />
-      </Active>
-      <Active>
-        <Component />
-      </Active>
-    </EventProvider>
+    <PortalProvider>
+      <EventProvider>
+        <ActiveBoundary>
+          <Component />
+        </ActiveBoundary>
+      </EventProvider>
+    </PortalProvider>
   );
 }
 ```
