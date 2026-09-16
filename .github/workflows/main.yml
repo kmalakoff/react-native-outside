@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: kmalakoff/react-native-event
-          ref: 97a360882cb70f19aff044d138875de8616716f5
+          ref: 692f0a2cbec25e94e69cdd3e77f4a555cbf8ea3b
           path: .tmp/candidates/react-native-event
       - name: Pack react-native-event
         working-directory: .tmp/candidates/react-native-event
@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: kmalakoff/react-ref-boundary
-          ref: 4642641ace59f315f81115829eca2659ff5ce106
+          ref: f80b556c6a2a7237ed48d7d73c361163e0f50ba2
           path: .tmp/candidates/react-ref-boundary
       - name: Pack react-ref-boundary
         working-directory: .tmp/candidates/react-ref-boundary
