@@ -58,7 +58,7 @@ function App() {
     <PortalProvider shouldAddRootHost={false}>
       <View style={{ flex: 1 }}>
         <EventProvider>
-          <View style={{ flex: 1, paddingTop: 48, paddingHorizontal: 24 }}>
+          <View style={{ flex: 1, paddingTop: 120, paddingHorizontal: 24 }}>
             <PortalHost name="root" />
             <PortalHost name="unrelated" />
             <View>
