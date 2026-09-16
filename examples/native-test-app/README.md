@@ -22,7 +22,7 @@ For iOS, from the fixture directory:
 ```sh
 npm run build:ios
 pod install --project-directory=ios
-npm run ios -- --no-packager --udid <simulator-udid>
+bash ../../test/integration/build-ios.sh <simulator-udid>
 maestro --device <simulator-udid> test ../../test/integration/maestro/native-outside.yaml
 ```
 
@@ -53,3 +53,6 @@ npm install --ignore-scripts --no-save --package-lock=false <contains.tgz> <even
 Install root candidates before its build, and fixture candidates after its
 `npm ci`, before validation and bundling. One copy of each context-bearing
 package must resolve from the fixture.
+
+The iOS helper builds for the selected simulator, installs with `simctl`, verifies
+the application container, and launches it before Maestro runs.
