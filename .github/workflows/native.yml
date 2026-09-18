@@ -1,0 +1,336 @@
+name: Native compatibility
+
+on:
+  workflow_call:
+    inputs:
+      candidate_package:
+        required: true
+        type: string
+      candidate_repository:
+        required: true
+        type: string
+      candidate_sha:
+        required: true
+        type: string
+      candidate_manifest:
+        required: false
+        default: ''
+        type: string
+      fixture_repository:
+        required: true
+        type: string
+      fixture_sha:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-caller:
+    name: Validate native caller
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Check candidate identity
+        env:
+          CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
+          CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CALLER_EVENT: ${{ github.event_name }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          CALLER_SHA: ${{ github.sha }}
+          PULL_REQUEST_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          PULL_REQUEST_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node test/integration/native/validate-caller.ts
+
+  package-candidates:
+    name: Package native candidates
+    needs: validate-caller
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - name: Install orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check candidate identity
+        env:
+          CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
+          CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CALLER_EVENT: ${{ github.event_name }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          CALLER_SHA: ${{ github.sha }}
+          PULL_REQUEST_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          PULL_REQUEST_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node test/integration/native/validate-caller.ts
+      - name: Pack all four candidates
+        env:
+          CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
+          CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CANDIDATE_MANIFEST: ${{ inputs.candidate_manifest }}
+        run: node test/integration/native/package-candidates.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-candidates
+          path: .tmp/native
+          if-no-files-found: error
+          include-hidden-files: true
+
+  current-android:
+    name: Current Android native flow
+    needs: package-candidates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-candidates
+          path: .tmp/native
+      - name: Install orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Prepare current fixture
+        run: node test/integration/native/prepare-fixture.ts --profile current --manifest .tmp/native/candidate-manifest.json --packages .tmp/native/packages
+      - name: Install Maestro
+        run: |
+          export MAESTRO_VERSION=2.7.0
+          curl -fsSL https://get.maestro.mobile.dev | bash
+      - name: Run current Android flow
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/current
+      - name: Upload Android diagnostics
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-current-android-diagnostics
+          path: |
+            .tmp/native/fixtures/current/.native-resolution.json
+            ~/.maestro/tests
+          include-hidden-files: true
+
+  current-ios:
+    name: Current iOS native flow
+    needs: package-candidates
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-candidates
+          path: .tmp/native
+      - name: Install orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Prepare current fixture
+        run: node test/integration/native/prepare-fixture.ts --profile current --manifest .tmp/native/candidate-manifest.json --packages .tmp/native/packages
+      - name: Install Maestro
+        run: |
+          export MAESTRO_VERSION=2.7.0
+          curl -fsSL https://get.maestro.mobile.dev | bash
+      - name: Select iOS simulator
+        run: |
+          DEVICE_INFO="$(node test/integration/native/select-simulator.ts --device 'iPhone 17' --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-5)"
+          IFS=$'\t' read -r DEVICE_UDID DEVICE_STATE <<< "$DEVICE_INFO"
+          test -n "$DEVICE_UDID"
+          echo "SIMULATOR_UDID=$DEVICE_UDID" >> "$GITHUB_ENV"
+          if [ "$DEVICE_STATE" != Booted ]; then xcrun simctl boot "$DEVICE_UDID"; fi
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+      - name: Run current iOS flow
+        run: |
+          export PATH="$HOME/.maestro/bin:$PATH"
+          node test/integration/native/run-platform.ts --platform ios --fixture .tmp/native/fixtures/current
+      - name: Upload iOS diagnostics
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-current-ios-diagnostics
+          path: |
+            .tmp/native/fixtures/current/.native-resolution.json
+            ~/.maestro/tests
+            ~/Library/Logs/CoreSimulator
+          include-hidden-files: true
+
+  minimum-android:
+    name: Minimum Android feasibility
+    needs: package-candidates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '8'
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-candidates
+          path: .tmp/native
+      - name: Install orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate RN 0.59.10 template and prepare fixture
+        run: node test/integration/native/prepare-fixture.ts --profile minimum --manifest .tmp/native/candidate-manifest.json --packages .tmp/native/packages
+      - name: Check RN 0.59 Metro toolchain
+        run: node test/integration/native/check-legacy-tooling.ts --fixture .tmp/native/fixtures/minimum
+      - name: Build minimum Metro bundle
+        working-directory: .tmp/native/fixtures/minimum
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: npm run build:android
+      - name: Attempt minimum Android native build
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/minimum --skip-build --skip-maestro
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Maestro
+        run: |
+          export MAESTRO_VERSION=2.7.0
+          curl -fsSL https://get.maestro.mobile.dev | bash
+      - name: Run minimum Android Maestro flow
+        run: |
+          export PATH="$HOME/.maestro/bin:$PATH"
+          maestro --device auto test .tmp/native/fixtures/minimum/.native/native-outside.yaml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-minimum-android-evidence
+          path: .tmp/native/fixtures/minimum/.native-resolution.json
+          if-no-files-found: ignore
+
+  minimum-ios:
+    name: Minimum iOS feasibility
+    needs: [package-candidates, minimum-android]
+    if: needs.minimum-android.result == 'success'
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ inputs.fixture_repository }}
+          ref: ${{ inputs.fixture_sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-candidates
+          path: .tmp/native
+      - name: Install orchestration dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Generate RN 0.59.10 template and prepare fixture
+        run: node test/integration/native/prepare-fixture.ts --profile minimum --manifest .tmp/native/candidate-manifest.json --packages .tmp/native/packages
+      - name: Build minimum Metro bundle
+        working-directory: .tmp/native/fixtures/minimum
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: npm run build:ios
+      - name: Select iOS simulator
+        run: |
+          DEVICE_INFO="$(node test/integration/native/select-simulator.ts)"
+          IFS=$'\t' read -r DEVICE_UDID DEVICE_STATE <<< "$DEVICE_INFO"
+          test -n "$DEVICE_UDID"
+          echo "SIMULATOR_UDID=$DEVICE_UDID" >> "$GITHUB_ENV"
+          if [ "$DEVICE_STATE" != Booted ]; then xcrun simctl boot "$DEVICE_UDID"; fi
+          xcrun simctl bootstatus "$DEVICE_UDID" -b
+      - name: Install Maestro
+        run: |
+          export MAESTRO_VERSION=2.7.0
+          curl -fsSL https://get.maestro.mobile.dev | bash
+      - name: Attempt minimum iOS flow
+        run: |
+          export PATH="$HOME/.maestro/bin:$PATH"
+          node test/integration/native/run-platform.ts --platform ios --fixture .tmp/native/fixtures/minimum --skip-build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-minimum-ios-evidence
+          path: .tmp/native/fixtures/minimum/.native-resolution.json
+          if-no-files-found: ignore
+
+  native-status:
+    name: Native caller status
+    if: always()
+    needs: [validate-caller, package-candidates, current-android, current-ios, minimum-android, minimum-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report native results
+        env:
+          VALIDATE: ${{ needs.validate-caller.result }}
+          PACKAGE: ${{ needs.package-candidates.result }}
+          CURRENT_ANDROID: ${{ needs.current-android.result }}
+          CURRENT_IOS: ${{ needs.current-ios.result }}
+          MINIMUM_ANDROID: ${{ needs.minimum-android.result }}
+          MINIMUM_IOS: ${{ needs.minimum-ios.result }}
+        run: |
+          {
+            echo "### Native compatibility caller status (current strict only)"
+            echo "- Caller validation: $VALIDATE"
+            echo "- Candidate packaging: $PACKAGE"
+            echo "- Current Android: $CURRENT_ANDROID"
+            echo "- Current iOS: $CURRENT_IOS"
+            echo "- Minimum Android feasibility (exploratory): $MINIMUM_ANDROID"
+            echo "- Minimum iOS feasibility (exploratory): $MINIMUM_IOS"
+            echo "- Overall compatibility is not claimed by this pilot: the current profile is strict; the RN 0.59.10 profile is exploratory and peer-contract blocked because react-native-outside declares react-native >=0.82.1."
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$VALIDATE" = success
+          test "$PACKAGE" = success
+          test "$CURRENT_ANDROID" = success
+          test "$CURRENT_IOS" = success
+          test "$MINIMUM_ANDROID" = success
+          test "$MINIMUM_IOS" = success

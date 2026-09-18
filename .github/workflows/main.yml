@@ -246,3 +246,15 @@ jobs:
             .tmp/android-logcat.txt
             ~/.maestro/tests
           include-hidden-files: true
+  native-compatibility-pilot:
+    name: Native compatibility pilot (manual)
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/native.yml
+    with:
+      candidate_package: react-native-outside
+      candidate_repository: ${{ github.repository }}
+      candidate_sha: ${{ github.sha }}
+      fixture_repository: ${{ github.repository }}
+      fixture_sha: ${{ github.sha }}
+    permissions:
+      contents: read

@@ -1,0 +1,9 @@
+{
+  "name": "current",
+  "sourceProject": "examples/native-test-app",
+  "react": "19.2.3",
+  "reactNative": "0.87.1",
+  "architecture": "fabric",
+  "nativeTestApp": "5.4.9",
+  "peerContract": "satisfied"
+}

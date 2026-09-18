@@ -1,0 +1,10 @@
+{
+  "name": "NativeMatrixMinimum",
+  "displayName": "NativeMatrixMinimum",
+  "android": {
+    "package": "com.nativematrixminimum"
+  },
+  "ios": {
+    "bundleIdentifier": "com.nativematrixminimum"
+  }
+}
