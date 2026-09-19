@@ -5,6 +5,11 @@ on:
       - master
   pull_request:
   workflow_dispatch:
+    inputs:
+      native_compatibility_pilot:
+        description: Run the exploratory native endpoint matrix
+        type: boolean
+        default: false
 jobs:
   candidate-packages:
     name: Build reviewed sibling packages
@@ -248,7 +253,7 @@ jobs:
           include-hidden-files: true
   native-compatibility-pilot:
     name: Native compatibility pilot (manual)
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.native_compatibility_pilot
     uses: ./.github/workflows/native.yml
     with:
       candidate_package: react-native-outside
