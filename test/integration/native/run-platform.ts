@@ -27,8 +27,6 @@ function run(command: string, args: string[], cwd: string, env = process.env): v
 
 function resolveAndroidDevice(): string {
   const configuredDevice = process.env.ANDROID_SERIAL?.trim();
-  if (configuredDevice) return configuredDevice;
-
   const devicesResult = spawnSync('adb', ['devices'], { encoding: 'utf8' });
   if (devicesResult.error) throw devicesResult.error;
   if (devicesResult.status !== 0) throw new Error(`adb devices failed with ${devicesResult.status}`);
@@ -37,13 +35,15 @@ function resolveAndroidDevice(): string {
     .map((line) => line.trim().split(/\s+/))
     .filter(([serial, state]) => Boolean(serial) && state === 'device')
     .map(([serial]) => serial);
-  if (devices.length !== 1) throw new Error(`Expected exactly one online Android device, found ${devices.length}: ${devices.join(', ') || '<none>'}`);
+  const device = configuredDevice ?? (devices.length === 1 ? devices[0] : undefined);
+  if (!device) throw new Error(`Expected exactly one online Android device, found ${devices.length}: ${devices.join(', ') || '<none>'}`);
+  if (!devices.includes(device)) throw new Error(`Configured ANDROID_SERIAL ${device} is not online: ${devices.join(', ') || '<none>'}`);
 
-  const serialResult = spawnSync('adb', ['-s', devices[0], 'get-serialno'], { encoding: 'utf8' });
+  const serialResult = spawnSync('adb', ['-s', device, 'get-serialno'], { encoding: 'utf8' });
   if (serialResult.error) throw serialResult.error;
-  if (serialResult.status !== 0) throw new Error(`adb -s ${devices[0]} get-serialno failed with ${serialResult.status}`);
+  if (serialResult.status !== 0) throw new Error(`adb -s ${device} get-serialno failed with ${serialResult.status}`);
   const serial = serialResult.stdout.trim();
-  if (!serial || serial === 'unknown' || serial !== devices[0]) throw new Error(`adb get-serialno did not confirm device ${devices[0]}`);
+  if (!serial || serial === 'unknown' || serial !== device) throw new Error(`adb get-serialno did not confirm device ${device}`);
   return serial;
 }
 
