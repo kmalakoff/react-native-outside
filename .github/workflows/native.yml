@@ -20,6 +20,7 @@ on:
       candidate_manifest:
         required: false
         default: ''
+        description: Optional full candidate manifest JSON; coordinated SHA overrides are accepted only from the canonical manual native-outside workflow
         type: string
       fixture_repository:
         required: true
@@ -94,6 +95,9 @@ jobs:
           CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
           CANDIDATE_MANIFEST: ${{ inputs.candidate_manifest }}
+          CALLER_EVENT: ${{ github.event_name }}
+          CALLER_REPOSITORY: ${{ github.repository }}
+          CALLER_SHA: ${{ github.sha }}
         run: node test/integration/native/package-candidates.ts
       - uses: actions/upload-artifact@v4
         with:

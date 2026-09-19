@@ -16,6 +16,19 @@ const candidateManifestJson = process.env.CANDIDATE_MANIFEST?.trim();
 const candidatePackage = process.env.CANDIDATE_PACKAGE;
 const candidateRepository = process.env.CANDIDATE_REPOSITORY;
 const candidateSha = process.env.CANDIDATE_SHA;
+const callerEvent = process.env.CALLER_EVENT;
+const callerRepository = process.env.CALLER_REPOSITORY;
+const callerSha = process.env.CALLER_SHA;
+
+const expected = ['react-native-contains', 'react-native-event', 'react-native-outside', 'react-ref-boundary'];
+const canonicalWorkflowRepository = 'kmalakoff/react-native-outside';
+const fullSha = /^[0-9a-f]{40}$/i;
+
+if (!candidatePackage || !candidateRepository || !candidateSha) throw new Error('Candidate package, repository and SHA are required');
+if (!callerEvent || !callerRepository || !callerSha) throw new Error('Caller event, repository and SHA are required');
+if (!fullSha.test(candidateSha) || !fullSha.test(callerSha)) throw new Error('Candidate and caller SHAs must be full 40-character commit SHAs');
+
+const coordinatedManual = callerEvent === 'workflow_dispatch' && callerRepository === canonicalWorkflowRepository && candidatePackage === 'react-native-outside' && candidateRepository === canonicalWorkflowRepository && candidateSha === callerSha;
 
 function run(command: string, args: string[], cwd: string): string {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
@@ -33,7 +46,6 @@ function readManifest(): Manifest {
   }
   const supplied = candidateManifestJson ? (JSON.parse(candidateManifestJson) as Manifest) : baseline;
   if (!Array.isArray(supplied.packages)) throw new Error('The candidate manifest must contain packages');
-  const expected = ['react-native-contains', 'react-native-event', 'react-native-outside', 'react-ref-boundary'];
   if (supplied.packages.length !== expected.length) throw new Error('The candidate manifest must contain exactly the four native packages');
   const suppliedNames = supplied.packages.map((candidate) => candidate.name);
   if (new Set(suppliedNames).size !== suppliedNames.length) throw new Error('The candidate manifest contains duplicate package names');
@@ -46,8 +58,13 @@ function readManifest(): Manifest {
     for (const candidate of supplied.packages) {
       const baselineCandidate = baselineByName.get(candidate.name);
       if (!baselineCandidate) throw new Error(`The candidate manifest contains an unknown package: ${candidate.name}`);
-      if (candidate.name !== candidatePackage && (candidate.repository !== baselineCandidate.repository || candidate.sha !== baselineCandidate.sha)) {
-        throw new Error(`Only the caller-associated candidate may differ from the approved repository/SHA manifest: ${candidate.name}`);
+      if (candidate.name !== candidatePackage) {
+        if (candidate.repository !== baselineCandidate.repository) {
+          throw new Error(`Only canonical repositories may supply non-caller candidates: ${candidate.name}`);
+        }
+        if (candidate.sha !== baselineCandidate.sha && !coordinatedManual) {
+          throw new Error(`Non-caller SHA overrides require a coordinated manual run from ${canonicalWorkflowRepository}: ${candidate.name}`);
+        }
       }
     }
   }
@@ -64,7 +81,7 @@ function readManifest(): Manifest {
     if (candidate.repository !== allowedRepository || basename(candidate.repository) !== candidate.name || candidate.repository.includes('..')) {
       throw new Error(`Repository does not match the approved or caller-associated repository for ${candidate.name}`);
     }
-    if (!/^[0-9a-f]{40}$/i.test(candidate.sha)) throw new Error(`Candidate ${candidate.name} must use a full commit SHA`);
+    if (!fullSha.test(candidate.sha)) throw new Error(`Candidate ${candidate.name} must use a full commit SHA`);
   }
   return { packages: expected.map((name) => packages.get(name) as Candidate) };
 }

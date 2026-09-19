@@ -3,17 +3,19 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import semver from 'semver';
 
-type PackageRecord = { name: string; version: string; tarball: string; sha256: string };
+type PackageRecord = { name: string; repository: string; sha: string; version: string; tarball: string; sha256: string };
 type Manifest = { packages: PackageRecord[] };
+type PackageJson = { name: string; version: string; peerDependencies?: Record<string, string> };
 
 const { values } = parseArgs({ options: { fixture: { type: 'string' }, profile: { type: 'string' }, manifest: { type: 'string' } } });
 const fixture = resolve(values.fixture ?? '');
 const profile = values.profile ?? 'current';
 const manifestPath = resolve(values.manifest ?? '.tmp/native/candidate-manifest.json');
+if (profile !== 'current' && profile !== 'minimum') throw new Error(`Unknown native profile: ${profile}`);
 if (!fixture || !existsSync(fixture)) throw new Error(`Fixture does not exist: ${fixture}`);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Manifest;
 
-function packageJson(name: string): { name: string; version: string; peerDependencies?: Record<string, string> } {
+function packageJson(name: string): PackageJson {
   return JSON.parse(readFileSync(join(fixture, 'node_modules', name, 'package.json'), 'utf8'));
 }
 
@@ -56,17 +58,32 @@ for (const candidate of manifest.packages) {
   if (installed.version !== candidate.version) throw new Error(`${candidate.name} resolved to ${installed.version}, expected ${candidate.version}`);
 }
 
+const peerContracts = manifest.packages.flatMap((candidate) => {
+  const installed = packageJson(candidate.name);
+  return ['react', 'react-native'].flatMap((dependency) => {
+    const range = installed.peerDependencies?.[dependency];
+    if (!range) return [];
+    const actual = dependency === 'react' ? react.version : reactNative.version;
+    return [{ candidate: candidate.name, dependency, range, actual, satisfied: semver.satisfies(actual, range) }];
+  });
+});
 const outside = packageJson('react-native-outside');
+const outsideContract = peerContracts.find(({ candidate, dependency }) => candidate === 'react-native-outside' && dependency === 'react-native');
 const peerContract = outside.peerDependencies?.['react-native'] ?? '<missing>';
-const peerContractSatisfied = peerContract !== '<missing>' && semver.satisfies(reactNative.version, peerContract);
+const peerContractSatisfied = outsideContract?.satisfied ?? false;
+const incompatiblePeerContracts = [...peerContracts.filter((contract) => !contract.satisfied), ...(outsideContract ? [] : [{ candidate: 'react-native-outside', dependency: 'react-native', range: '<missing>', actual: reactNative.version, satisfied: false }])];
 const report = {
   profile,
   react: react.version,
   reactNative: reactNative.version,
-  candidates: manifest.packages.map(({ name, version, tarball, sha256 }) => ({ name, version, tarball, sha256 })),
+  candidates: manifest.packages.map(({ name, repository, sha, version, tarball, sha256 }) => ({ name, repository, sha, version, tarball, sha256 })),
+  peerContracts,
   peerContract,
   peerContractSatisfied,
   peerContractStatus: peerContract === '<missing>' ? 'missing' : peerContractSatisfied ? `satisfied: react-native@${reactNative.version} matches ${peerContract}` : `blocked: react-native@${reactNative.version} does not match ${peerContract}`,
 };
 writeFileSync(join(fixture, '.native-resolution.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify(report, null, 2));
+if (profile === 'current' && incompatiblePeerContracts.length > 0) {
+  throw new Error(`Current profile has incompatible React/RN peer contracts: ${incompatiblePeerContracts.map(({ candidate, dependency, actual, range }) => `${candidate} requires ${dependency} ${range}, got ${actual}`).join('; ')}`);
+}

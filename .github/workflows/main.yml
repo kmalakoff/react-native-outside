@@ -15,6 +15,10 @@ on:
         type: choice
         default: current
         options: [current, minimum, all]
+      native_candidate_manifest:
+        description: Optional full native candidate manifest JSON for a coordinated canonical manual run
+        type: string
+        default: ''
 jobs:
   candidate-packages:
     name: Build reviewed sibling packages
@@ -96,6 +100,7 @@ jobs:
   ios-native-smoke:
     needs: candidate-packages
     name: iOS native smoke (RN 0.87.1)
+    if: github.event_name != 'workflow_dispatch' || !inputs.native_compatibility_pilot
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -195,6 +200,7 @@ jobs:
   android-native-smoke:
     needs: candidate-packages
     name: Android native smoke (RN 0.87.1)
+    if: github.event_name != 'workflow_dispatch' || !inputs.native_compatibility_pilot
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -265,6 +271,7 @@ jobs:
       candidate_package: react-native-outside
       candidate_repository: ${{ github.repository }}
       candidate_sha: ${{ github.sha }}
+      candidate_manifest: ${{ inputs.native_candidate_manifest }}
       fixture_repository: ${{ github.repository }}
       fixture_sha: ${{ github.sha }}
     permissions:
