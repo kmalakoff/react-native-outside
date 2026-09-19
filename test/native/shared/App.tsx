@@ -1,27 +1,69 @@
 import { Portal, PortalHost, PortalProvider } from '@gorhom/portal';
 import React, { type ComponentRef, type ForwardedRef, forwardRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import contains, { type NativeElement } from 'react-native-contains';
 import { EventProvider, useEvent } from 'react-native-event';
-import type * as ReactNativeOutside from 'react-native-outside';
-import type { ActiveInjectedProps } from 'react-native-outside';
-import { useRef as useBoundaryRef } from 'react-ref-boundary';
+import { Active, ActiveBoundary, type ActiveInjectedProps } from 'react-native-outside';
+import { useBoundary, useRef as useBoundaryRef } from 'react-ref-boundary';
 
-const { Active, ActiveBoundary } = require('react-native-outside') as typeof ReactNativeOutside;
+type NativeTarget = NativeElement | number;
+const touchableStyle = { minHeight: 44, justifyContent: 'center' as const };
 
-function EventStatus() {
-  const [eventCount, setEventCount] = useState(0);
-  useEvent(() => setEventCount((current) => current + 1), []);
-  return <Text testID="event-status">{eventCount > 0 ? 'EVENT_SMOKE_RECEIVED' : 'EVENT_SMOKE_PENDING'}</Text>;
+function containsNative(element: unknown, target: unknown): boolean {
+  return element !== null && element !== undefined && contains(element as NativeElement, target as NativeTarget);
+}
+
+function ContainsProbe() {
+  const rootRef = React.useRef<ComponentRef<typeof View> | null>(null);
+  const descendantRef = React.useRef<ComponentRef<typeof View> | null>(null);
+  const outsideRef = React.useRef<ComponentRef<typeof View> | null>(null);
+  const [staticChecks, setStaticChecks] = useState(false);
+  const [eventReceived, setEventReceived] = useState(false);
+  const [eventInside, setEventInside] = useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    const root = rootRef.current;
+    const descendant = descendantRef.current;
+    const outside = outsideRef.current;
+    if (root && descendant && outside) setStaticChecks(containsNative(root, root) && containsNative(root, descendant) && !containsNative(root, outside));
+  }, []);
+
+  useEvent((event) => {
+    setEventReceived(true);
+    setEventInside(containsNative(rootRef.current, event.target));
+  }, []);
+
+  return (
+    <View>
+      <View ref={rootRef} testID="contains-root">
+        <TouchableOpacity style={touchableStyle} testID="contains-event" onPress={() => {}}>
+          <Text>Contains event target</Text>
+        </TouchableOpacity>
+        <View ref={descendantRef}>
+          <Text>Contains descendant</Text>
+        </View>
+      </View>
+      <View ref={outsideRef}>
+        <TouchableOpacity style={touchableStyle} testID="contains-outside-event" onPress={() => {}}>
+          <Text>Contains outside</Text>
+        </TouchableOpacity>
+      </View>
+      <Text testID="contains-static-status">{staticChecks ? 'CONTAINS_SMOKE_STATIC_PASS' : 'CONTAINS_SMOKE_STATIC_PENDING'}</Text>
+      <Text testID="event-status">{eventReceived ? 'EVENT_SMOKE_RECEIVED' : 'EVENT_SMOKE_PENDING'}</Text>
+      <Text testID="contains-event-status">{eventInside === true ? 'CONTAINS_SMOKE_EVENT_INSIDE' : 'CONTAINS_SMOKE_EVENT_PENDING'}</Text>
+      <Text testID="contains-outside-event-status">{eventInside === false ? 'CONTAINS_SMOKE_EVENT_OUTSIDE' : 'CONTAINS_SMOKE_EVENT_OUTSIDE_PENDING'}</Text>
+    </View>
+  );
 }
 
 function ActiveContent({ isActive, setIsActive }: Partial<ActiveInjectedProps>, ref: ForwardedRef<ComponentRef<typeof View>>) {
   return (
     <View ref={ref}>
       <Text testID="active-status">{isActive ? 'ACTIVE_SMOKE_ACTIVE' : 'ACTIVE_SMOKE_INACTIVE'}</Text>
-      <TouchableOpacity testID="active-toggle" onPress={() => setIsActive?.((current) => !current)}>
+      <TouchableOpacity style={touchableStyle} testID="active-toggle" onPress={() => setIsActive?.((current) => !current)}>
         <Text>Toggle active component</Text>
       </TouchableOpacity>
-      <TouchableOpacity testID="active-inside" onPress={() => {}}>
+      <TouchableOpacity style={touchableStyle} testID="active-inside" onPress={() => {}}>
         <Text>Inside active component</Text>
       </TouchableOpacity>
     </View>
@@ -30,24 +72,43 @@ function ActiveContent({ isActive, setIsActive }: Partial<ActiveInjectedProps>, 
 
 const ForwardedActiveContent = forwardRef(ActiveContent);
 
-function BoundaryContent({ isActive, setIsActive }: Partial<ActiveInjectedProps>, ref: ForwardedRef<ComponentRef<typeof View>>) {
+function RegisteredPortal() {
   const registeredRef = useBoundaryRef<ComponentRef<typeof TouchableOpacity> | null>(null);
+  return (
+    <Portal>
+      <TouchableOpacity style={touchableStyle} ref={registeredRef} testID="registered-portal" onPress={() => {}}>
+        <Text>Registered portal</Text>
+      </TouchableOpacity>
+    </Portal>
+  );
+}
+
+function BoundaryContent({ isActive, setIsActive }: Partial<ActiveInjectedProps>, ref: ForwardedRef<ComponentRef<typeof View>>) {
+  const [showRegistered, setShowRegistered] = useState(true);
+  const [, forceRegistryRender] = useState(0);
+  const { refs } = useBoundary();
+  React.useEffect(() => forceRegistryRender((current) => current + 1), [forceRegistryRender, showRegistered]);
+  const expectedRegistrySize = showRegistered ? 2 : 1;
+  const registryReady = refs.length === expectedRegistrySize && refs.every((boundaryRef) => boundaryRef.current !== null);
+  const registryStatus = registryReady
+    ? showRegistered ? 'BOUNDARY_REGISTRY_REGISTERED' : 'BOUNDARY_REGISTRY_CLEAN'
+    : 'BOUNDARY_REGISTRY_PENDING';
   return (
     <View ref={ref}>
       <Text testID="boundary-status">{isActive ? 'BOUNDARY_SMOKE_ACTIVE' : 'BOUNDARY_SMOKE_INACTIVE'}</Text>
-      <TouchableOpacity testID="boundary-toggle" onPress={() => setIsActive?.((current) => !current)}>
+      <TouchableOpacity style={touchableStyle} testID="boundary-toggle" onPress={() => setIsActive?.((current) => !current)}>
         <Text>Toggle boundary component</Text>
       </TouchableOpacity>
-      <TouchableOpacity testID="boundary-inside" onPress={() => {}}>
+      <TouchableOpacity style={touchableStyle} testID="boundary-inside" onPress={() => {}}>
         <Text>Inside boundary component</Text>
       </TouchableOpacity>
-      <Portal>
-        <TouchableOpacity ref={registeredRef} testID="registered-portal" onPress={() => {}}>
-          <Text>Registered portal</Text>
-        </TouchableOpacity>
-      </Portal>
+      <Text testID="boundary-registry-status">{registryStatus}</Text>
+      <TouchableOpacity style={touchableStyle} testID="boundary-cleanup" onPress={() => setShowRegistered(false)}>
+        <Text>Clean registered portal</Text>
+      </TouchableOpacity>
+      {showRegistered ? <RegisteredPortal /> : null}
       <Portal hostName="unrelated">
-        <TouchableOpacity testID="unrelated-portal" onPress={() => {}}>
+        <TouchableOpacity style={touchableStyle} testID="unrelated-portal" onPress={() => {}}>
           <Text>Unrelated portal</Text>
         </TouchableOpacity>
       </Portal>
@@ -59,12 +120,18 @@ const ForwardedBoundaryContent = forwardRef(BoundaryContent);
 
 export default function App() {
   const [ready, setReady] = useState(false);
+  const [showContains, setShowContains] = useState(true);
   return (
     <PortalProvider shouldAddRootHost={false}>
       <View style={{ flex: 1 }}>
         <EventProvider>
-          <EventStatus />
-          <View style={{ flex: 1, paddingTop: 120, paddingHorizontal: 24 }}>
+          <View style={{ flex: 1, paddingTop: 64, paddingHorizontal: 24 }}>
+            {showContains ? <>
+              <ContainsProbe />
+              <TouchableOpacity style={touchableStyle} testID="contains-complete" onPress={() => setShowContains(false)}>
+                <Text>Continue to outside tests</Text>
+              </TouchableOpacity>
+            </> : <>
             <PortalHost name="root" />
             <PortalHost name="unrelated" />
             <View>
@@ -75,10 +142,11 @@ export default function App() {
               <ActiveBoundary>
                 <ForwardedBoundaryContent />
               </ActiveBoundary>
-              <TouchableOpacity testID="outside" onPress={() => setReady(true)}>
+              <TouchableOpacity style={touchableStyle} testID="outside" onPress={() => setReady(true)}>
                 <Text>Outside</Text>
               </TouchableOpacity>
             </View>
+            </>}
           </View>
         </EventProvider>
       </View>

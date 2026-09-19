@@ -10,6 +10,11 @@ on:
         description: Run the exploratory native endpoint matrix
         type: boolean
         default: false
+      native_profile:
+        description: Native profile; minimum and all include exploratory legacy testing
+        type: choice
+        default: current
+        options: [current, minimum, all]
 jobs:
   candidate-packages:
     name: Build reviewed sibling packages
@@ -256,6 +261,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.native_compatibility_pilot
     uses: ./.github/workflows/native.yml
     with:
+      profile: ${{ inputs.native_profile || 'current' }}
       candidate_package: react-native-outside
       candidate_repository: ${{ github.repository }}
       candidate_sha: ${{ github.sha }}
