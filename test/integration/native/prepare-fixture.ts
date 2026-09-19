@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { build } from 'esbuild';
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
+import { build } from 'esbuild';
 import { safeRmSync } from 'fs-remove-compat';
 
 const { values } = parseArgs({
@@ -59,7 +59,10 @@ const sourceProject = join(repository, `test/native/${profile}`);
 const excludedSegments = new Set(profile === 'current' ? ['node_modules', 'dist', 'Pods', 'DerivedData', '.native'] : ['node_modules', 'dist', '.native']);
 cpSync(sourceProject, fixture, {
   recursive: true,
-  filter: (source) => !relative(sourceProject, source).split(sep).some((segment) => excludedSegments.has(segment)),
+  filter: (source) =>
+    !relative(sourceProject, source)
+      .split(sep)
+      .some((segment) => excludedSegments.has(segment)),
 });
 
 const appTsx = join(fixture, 'App.tsx');

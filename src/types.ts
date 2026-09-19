@@ -1,4 +1,4 @@
-import type { ComponentRef, Dispatch, ReactElement, RefAttributes, SetStateAction } from 'react';
+import type { Dispatch, ReactElement, RefAttributes, SetStateAction } from 'react';
 import type { View } from 'react-native';
 
 export interface ActiveInjectedProps {
@@ -8,7 +8,7 @@ export interface ActiveInjectedProps {
 
 export type ActiveBoundaryInjectedProps = ActiveInjectedProps;
 
-export type ActiveChildProps = Partial<ActiveInjectedProps> & RefAttributes<ComponentRef<typeof View>>;
+export type ActiveChildProps = Partial<ActiveInjectedProps> & RefAttributes<View>;
 
 export interface ActiveProps {
   children: ReactElement<ActiveChildProps>;

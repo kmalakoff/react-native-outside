@@ -1,23 +1,23 @@
 import { importMapsPlugin } from '@web/dev-server-import-maps';
 import createConfig from 'tsds-web-test-runner/createConfig.mjs';
+import { prepareReactProfile } from './test/lib/local-react-bundle.mjs';
+import { prepareNativeWebProfile } from './test/lib/native-web-bundle.mjs';
 
-export default createConfig({
-  files: ['test/exports/import.test.ts', 'test/exports/import.test.mjs', 'test/unit/native-web.test.tsx', 'test/unit/native.test.tsx'],
-  port: 9012,
-  plugins: [
-    importMapsPlugin({
-      inject: {
-        importMap: {
-          imports: {
-            react: 'https://esm.sh/react@18.3.1?dev',
-            'react-dom': 'https://esm.sh/react-dom@18.3.1?dev',
-            'react-dom/client': 'https://esm.sh/react-dom@18.3.1/client.js?dev',
-            'react-native-web': 'https://esm.sh/react-native-web@0.19.13?dev&external=react,react-dom',
-            'react-native': 'https://esm.sh/react-native-web@0.19.13?dev&external=react,react-dom',
-            'react-test-renderer': 'https://esm.sh/react-test-renderer@18.3.1?dev',
-          },
-        },
-      },
-    }),
-  ],
+const profile = process.env.REACT_TEST_PROFILE || 'current';
+if (profile !== 'minimum' && profile !== 'current') throw new Error(`Unknown React browser profile: ${profile}`);
+
+const config = createConfig({
+  hostname: 'localhost',
+  port: profile === 'minimum' ? 9022 : 9023,
+  nodeResolve: {
+    modulePaths: [`${process.cwd()}/test/browser/${profile}/node_modules`],
+  },
 });
+const localProfile = await prepareReactProfile(profile);
+Object.assign(localProfile.imports, await prepareNativeWebProfile(profile));
+
+config.plugins = config.plugins.filter((plugin) => plugin.name !== 'import-map');
+config.plugins.push(importMapsPlugin({ inject: { importMap: localProfile } }));
+config.browsers = [config.browsers[0]];
+
+export default config;

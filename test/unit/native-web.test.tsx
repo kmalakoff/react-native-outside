@@ -2,11 +2,12 @@
 
 import assert from 'assert';
 import type { ComponentRef, ForwardedRef } from 'react';
-import React, { act } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { Fragment } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { EventProvider, useEvent } from 'react-native-event';
-import { Active, ActiveBoundary, type ActiveInjectedProps } from 'react-native-outside';
+import { Active, ActiveBoundary, type ActiveBoundaryProps, type ActiveInjectedProps, type ActiveProps } from 'react-native-outside';
+import { containsTarget } from '../../src/lib/nativeTarget.ts';
+import { act, type MountedRoot, mount } from '../lib/react-dom.tsx';
 
 type ViewRef = ComponentRef<typeof View>;
 
@@ -15,10 +16,30 @@ function dispatchMouseEvent(target: Element, type: string) {
 }
 
 describe('react-native-web DOM events', () => {
+  it('rejects fragments and multiple children before rendering hooks', () => {
+    assert.throws(() => Active({ children: (<Fragment />) as unknown as ActiveProps['children'] }), /non-Fragment child/);
+    assert.throws(() => Active({ children: [<View key="a" />, <View key="b" />] as unknown as ActiveProps['children'] }), /single React element child/);
+    assert.throws(() => ActiveBoundary({ children: (<Fragment />) as unknown as ActiveBoundaryProps['children'] }), /non-Fragment child/);
+    assert.throws(() => ActiveBoundary({ children: [<View key="a" />, <View key="b" />] as unknown as ActiveBoundaryProps['children'] }), /single React element child/);
+  });
+
+  it('checks DOM hosts directly and rejects invalid targets', () => {
+    const host = document.createElement('main');
+    const inside = document.createElement('span');
+    const outside = document.createElement('aside');
+    host.appendChild(inside);
+    assert.equal(containsTarget(host, host), true);
+    assert.equal(containsTarget(host, inside), true);
+    assert.equal(containsTarget(host, outside), false);
+    assert.equal(containsTarget(host, {}), false);
+  });
   it('keeps Active inside and dismisses outside while preserving an object ref', async () => {
     const container = document.createElement('div');
     document.body.append(container);
-    const root = createRoot(container);
+    let root!: MountedRoot;
+    act(() => {
+      root = mount(container, null);
+    });
     const consumerRef = React.createRef<ViewRef>();
     let eventCount = 0;
     const Component = React.forwardRef(({ isActive, setIsActive }: Partial<ActiveInjectedProps>, ref: ForwardedRef<ViewRef>) => (
@@ -35,7 +56,7 @@ describe('react-native-web DOM events', () => {
     }
 
     try {
-      await act(async () => {
+      act(() => {
         root.render(
           <EventProvider>
             <Active>
@@ -60,16 +81,16 @@ describe('react-native-web DOM events', () => {
       assert.ok(outside);
       assert.equal(status.textContent, 'inactive');
 
-      await act(async () => dispatchMouseEvent(toggle, 'click'));
+      act(() => dispatchMouseEvent(toggle, 'click'));
       assert.equal(status.textContent, 'active');
-      await act(async () => dispatchMouseEvent(inside, 'mousedown'));
+      act(() => dispatchMouseEvent(inside, 'mousedown'));
       assert.equal(status.textContent, 'active');
       assert.ok(eventCount > 0, 'inside event did not enter EventProvider');
-      await act(async () => dispatchMouseEvent(outside, 'mousedown'));
+      act(() => dispatchMouseEvent(outside, 'mousedown'));
       assert.equal(status.textContent, 'inactive');
       assert.ok(eventCount > 1, 'outside event did not enter EventProvider');
     } finally {
-      await act(async () => root.unmount());
+      act(() => root.unmount());
       assert.equal(consumerRef.current, null);
       container.remove();
     }
@@ -78,7 +99,10 @@ describe('react-native-web DOM events', () => {
   it('keeps ActiveBoundary inside and dismisses outside while cleaning a callback ref', async () => {
     const container = document.createElement('div');
     document.body.append(container);
-    const root = createRoot(container);
+    let root!: MountedRoot;
+    act(() => {
+      root = mount(container, null);
+    });
     const callbackValues: Array<ViewRef | null> = [];
     const consumerRef = (value: ViewRef | null) => {
       callbackValues.push(value);
@@ -98,7 +122,7 @@ describe('react-native-web DOM events', () => {
     }
 
     try {
-      await act(async () => {
+      act(() => {
         root.render(
           <EventProvider>
             <ActiveBoundary>
@@ -123,16 +147,16 @@ describe('react-native-web DOM events', () => {
       assert.ok(outside);
       assert.equal(status.textContent, 'inactive');
 
-      await act(async () => dispatchMouseEvent(toggle, 'click'));
+      act(() => dispatchMouseEvent(toggle, 'click'));
       assert.equal(status.textContent, 'active');
-      await act(async () => dispatchMouseEvent(inside, 'mousedown'));
+      act(() => dispatchMouseEvent(inside, 'mousedown'));
       assert.equal(status.textContent, 'active');
       assert.ok(eventCount > 0, 'inside event did not enter EventProvider');
-      await act(async () => dispatchMouseEvent(outside, 'mousedown'));
+      act(() => dispatchMouseEvent(outside, 'mousedown'));
       assert.equal(status.textContent, 'inactive');
       assert.ok(eventCount > 1, 'outside event did not enter EventProvider');
     } finally {
-      await act(async () => root.unmount());
+      act(() => root.unmount());
       assert.equal(callbackValues[callbackValues.length - 1], null);
       container.remove();
     }
@@ -141,7 +165,10 @@ describe('react-native-web DOM events', () => {
     it(`keeps ${Wrapper.name} instances independent`, async () => {
       const container = document.createElement('div');
       document.body.append(container);
-      const root = createRoot(container);
+      let root!: MountedRoot;
+      act(() => {
+        root = mount(container, null);
+      });
       const Component = React.forwardRef(({ id, isActive, setIsActive }: Partial<ActiveInjectedProps> & { id: string }, ref: ForwardedRef<ViewRef>) => (
         <View ref={ref} testID={`${id}-inside`}>
           <Text testID={`${id}-status`}>{isActive ? 'active' : 'inactive'}</Text>
@@ -154,7 +181,7 @@ describe('react-native-web DOM events', () => {
         return found;
       };
       try {
-        await act(async () => {
+        act(() => {
           root.render(
             <EventProvider>
               <Wrapper>
@@ -166,17 +193,17 @@ describe('react-native-web DOM events', () => {
             </EventProvider>
           );
         });
-        await act(async () => {
+        act(() => {
           dispatchMouseEvent(element('first-toggle'), 'click');
           dispatchMouseEvent(element('second-toggle'), 'click');
         });
         assert.equal(element('first-status').textContent, 'active');
         assert.equal(element('second-status').textContent, 'active');
-        await act(async () => dispatchMouseEvent(element('first-inside'), 'mousedown'));
+        act(() => dispatchMouseEvent(element('first-inside'), 'mousedown'));
         assert.equal(element('first-status').textContent, 'active');
         assert.equal(element('second-status').textContent, 'inactive');
       } finally {
-        await act(async () => root.unmount());
+        act(() => root.unmount());
         container.remove();
       }
     });

@@ -66,11 +66,7 @@ const report = {
   candidates: manifest.packages.map(({ name, version, tarball, sha256 }) => ({ name, version, tarball, sha256 })),
   peerContract,
   peerContractSatisfied,
-  peerContractStatus: peerContract === '<missing>'
-    ? 'missing'
-    : peerContractSatisfied
-      ? `satisfied: react-native@${reactNative.version} matches ${peerContract}`
-      : `blocked: react-native@${reactNative.version} does not match ${peerContract}`,
+  peerContractStatus: peerContract === '<missing>' ? 'missing' : peerContractSatisfied ? `satisfied: react-native@${reactNative.version} matches ${peerContract}` : `blocked: react-native@${reactNative.version} does not match ${peerContract}`,
 };
 writeFileSync(join(fixture, '.native-resolution.json'), `${JSON.stringify(report, null, 2)}\n`);
 console.log(JSON.stringify(report, null, 2));

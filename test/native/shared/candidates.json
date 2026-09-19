@@ -3,7 +3,7 @@
     {
       "name": "react-native-contains",
       "repository": "kmalakoff/react-native-contains",
-      "sha": "e9e45b1964e21c4d355d4776e126d4a4fc9b8b64"
+      "sha": "39990aeb9e4457bbc87db275f30b306308b63eca"
     },
     {
       "name": "react-native-event",
@@ -18,7 +18,7 @@
     {
       "name": "react-ref-boundary",
       "repository": "kmalakoff/react-ref-boundary",
-      "sha": "f80b556c6a2a7237ed48d7d73c361163e0f50ba2"
+      "sha": "e3b18914c5bca416186dc52a714fc865ce264e2b"
     }
   ]
 }

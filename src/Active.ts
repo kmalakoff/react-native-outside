@@ -1,4 +1,3 @@
-import type { ComponentRef } from 'react';
 import { Children, cloneElement, Fragment, useRef, useState } from 'react';
 import type { View } from 'react-native';
 import { useEvent } from 'react-native-event';
@@ -15,8 +14,8 @@ export default function Active({ children }: ActiveProps) {
   const state = useState<boolean>(false);
   const isActive = state[0];
   const setIsActive = state[1];
-  const ref = useRef<ComponentRef<typeof View> | null>(null);
-  const childRef = getElementRef<ComponentRef<typeof View>>(child);
+  const ref = useRef<View | null>(null);
+  const childRef = getElementRef<View>(child);
   const composedRef = useComposedRefs(childRef, ref);
   useEvent(
     (event) => {
