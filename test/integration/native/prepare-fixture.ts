@@ -90,5 +90,5 @@ writeFileSync(join(fixture, '.native/native-outside.yaml'), sharedFlow.replace(/
 run('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund', ...(profile === 'minimum' ? ['--legacy-peer-deps'] : [])], fixture);
 const tarballs = manifest.packages.map((candidate) => join(packageDirectory, candidate.tarball));
 run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--no-save', '--package-lock=false', ...(profile === 'minimum' ? ['--legacy-peer-deps'] : []), ...tarballs], fixture);
-run(process.execPath, [join(repository, 'test/integration/native/check-resolution.ts'), '--fixture', fixture, '--profile', profile, '--manifest', manifestPath], repository);
+console.log(run(process.execPath, [join(repository, 'test/integration/native/check-resolution.ts'), '--fixture', fixture, '--profile', profile, '--manifest', manifestPath], repository));
 console.log(`Prepared ${profile} fixture at ${fixture}`);
