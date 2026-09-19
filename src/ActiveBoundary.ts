@@ -1,4 +1,4 @@
-import type { Dispatch, ReactElement } from 'react';
+import type { Dispatch, ElementRef, ReactElement } from 'react';
 import { Children, cloneElement, createElement, Fragment, useState } from 'react';
 import type { View } from 'react-native';
 import { useEvent } from 'react-native-event';
@@ -14,8 +14,8 @@ interface ComponentProps {
 }
 
 function Component({ child, isActive, setIsActive }: ComponentProps) {
-  const ref = useBoundaryRef<View | null>(null);
-  const childRef = getElementRef<View>(child);
+  const ref = useBoundaryRef<ElementRef<typeof View> | null>(null);
+  const childRef = getElementRef<ElementRef<typeof View>>(child);
   const composedRef = useComposedRefs(childRef, ref);
   const boundary = useBoundary();
   useEvent(
