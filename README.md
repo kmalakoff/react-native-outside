@@ -110,10 +110,10 @@ export default function App() {
 
 ### Testing
 
-Run `npm test`, then `npm run test:engines` for consumer types, browser
-interactions, and Node containment/export checks. The
-[native fixture](examples/native-test-app/README.md) exercises real iOS and
-Android input, including registered and unrelated portals, in GitHub Actions.
+Run `npm test` for consumer types, browser interactions and Node helper checks,
+then `npm run test:engines` for export resolution on Node.js 16.0.0. The shared
+native fixture exercises real iOS and Android input, including registered and
+unrelated portals, in GitHub Actions. See the [compatibility matrix](test/README.md).
 
 ### Documentation
 
