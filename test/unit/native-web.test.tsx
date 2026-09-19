@@ -33,7 +33,7 @@ describe('react-native-web DOM events', () => {
     assert.equal(containsTarget(host, outside), false);
     assert.equal(containsTarget(host, {}), false);
   });
-  it('keeps Active inside and dismisses outside while preserving an object ref', async () => {
+  it('keeps Active inside and dismisses outside while preserving an object ref', () => {
     const container = document.createElement('div');
     document.body.append(container);
     let root!: MountedRoot;
@@ -67,7 +67,6 @@ describe('react-native-web DOM events', () => {
           </EventProvider>
         );
       });
-      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const host = consumerRef.current;
       assert.ok(host instanceof HTMLElement);
@@ -96,7 +95,7 @@ describe('react-native-web DOM events', () => {
     }
   });
 
-  it('keeps ActiveBoundary inside and dismisses outside while cleaning a callback ref', async () => {
+  it('keeps ActiveBoundary inside and dismisses outside while cleaning a callback ref', () => {
     const container = document.createElement('div');
     document.body.append(container);
     let root!: MountedRoot;
@@ -133,7 +132,6 @@ describe('react-native-web DOM events', () => {
           </EventProvider>
         );
       });
-      await new Promise((resolve) => setTimeout(resolve, 0));
 
       const host = callbackValues[0];
       assert.ok(host instanceof HTMLElement);
@@ -162,7 +160,7 @@ describe('react-native-web DOM events', () => {
     }
   });
   for (const Wrapper of [Active, ActiveBoundary]) {
-    it(`keeps ${Wrapper.name} instances independent`, async () => {
+    it(`keeps ${Wrapper.name} instances independent`, () => {
       const container = document.createElement('div');
       document.body.append(container);
       let root!: MountedRoot;

@@ -52,6 +52,7 @@
     "@types/node": "*",
     "@types/react": "*",
     "@types/react-dom": "*",
+    "@types/semver": "^7.8.0",
     "@web/dev-server-import-maps": "^0.3.0",
     "assert": "^1.5.1",
     "esbuild": "^0.28.2",
