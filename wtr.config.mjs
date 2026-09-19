@@ -4,11 +4,11 @@ import { prepareReactProfile } from './test/lib/local-react-bundle.mjs';
 import { prepareNativeWebProfile } from './test/lib/native-web-bundle.mjs';
 
 const profile = process.env.REACT_TEST_PROFILE || 'current';
-if (profile !== 'minimum' && profile !== 'current') throw new Error(`Unknown React browser profile: ${profile}`);
+if (!['minimum', 'current', 'react17', 'react18'].includes(profile)) throw new Error(`Unknown React browser profile: ${profile}`);
 
 const config = createConfig({
   hostname: 'localhost',
-  port: profile === 'minimum' ? 9022 : 9023,
+  port: { minimum: 9022, current: 9023, react17: 9106, react18: 9107 }[profile],
   nodeResolve: {
     modulePaths: [`${process.cwd()}/test/browser/${profile}/node_modules`],
   },

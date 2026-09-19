@@ -45,7 +45,8 @@
     "test:node": "tsds test:node --no-timeouts test/unit/lib/nativeTarget.test.ts test/exports/require.test.cjs",
     "test:types": "npm run build && node test/types/run.ts",
     "test:types:generated": "npm run build && node test/types/run.ts --generated",
-    "version": "tsds version"
+    "version": "tsds version",
+    "test:browser:checkpoints": "node test/lib/browser-checkpoints.mjs"
   },
   "devDependencies": {
     "@types/mocha": "*",
