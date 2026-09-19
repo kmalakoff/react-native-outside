@@ -2,6 +2,37 @@ appId: com.reactnativeoutside.smoke
 ---
 - launchApp:
     clearState: true
+- assertVisible: "EVENT_COUNT_0"
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_1"
+- assertVisible: "EVENT_MODE_initial"
+- assertVisible: "INSIDE_PRESS_COUNT_1"
+- tapOn:
+    id: outside-button
+- assertVisible: "OUTSIDE_COUNT_1"
+- assertVisible: "EVENT_COUNT_1"
+- tapOn:
+    id: update-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_2"
+- assertVisible: "EVENT_MODE_updated"
+- assertVisible: "INSIDE_PRESS_COUNT_2"
+- tapOn:
+    id: toggle-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_2"
+- assertVisible: "INSIDE_PRESS_COUNT_3"
+- tapOn:
+    id: toggle-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_3"
+- assertVisible: "INSIDE_PRESS_COUNT_4"
+- tapOn:
+    id: event-complete
 - assertVisible: "CONTAINS_SMOKE_STATIC_PASS"
 - tapOn:
     id: contains-event

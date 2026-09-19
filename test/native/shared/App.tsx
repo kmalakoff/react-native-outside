@@ -1,10 +1,85 @@
 import { Portal, PortalHost, PortalProvider } from '@gorhom/portal';
-import React, { type ComponentRef, type ForwardedRef, forwardRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { type ComponentRef, type ForwardedRef, forwardRef, useCallback, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import contains, { type NativeElement } from 'react-native-contains';
 import { EventProvider, useEvent } from 'react-native-event';
 import { Active, ActiveBoundary, type ActiveInjectedProps } from 'react-native-outside';
 import { useBoundary, useRef as useBoundaryRef } from 'react-ref-boundary';
+
+function Listener({ mode, onEvent }: { mode: string; onEvent: (mode: string) => void }) {
+  const handler = useCallback(() => {
+    onEvent(mode);
+  }, [mode, onEvent]);
+  useEvent(handler, [mode]);
+  return null;
+}
+
+function EventProbe({ onComplete }: { onComplete: () => void }) {
+  const [eventCount, setEventCount] = useState(0);
+  const [insidePressCount, setInsidePressCount] = useState(0);
+  const [outsideCount, setOutsideCount] = useState(0);
+  const [mode, setMode] = useState('initial');
+  const [lastEventMode, setLastEventMode] = useState('none');
+  const [enabled, setEnabled] = useState(true);
+
+  const onEvent = useCallback((eventMode: string) => {
+    setEventCount((count) => count + 1);
+    setLastEventMode(eventMode);
+  }, []);
+
+  return (
+    <View style={eventStyles.root}>
+      <View style={eventStyles.controls}>
+        <TouchableOpacity testID="update-button" onPress={() => setMode('updated')} style={eventStyles.button}>
+          <Text>Update handler</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="toggle-button" onPress={() => setEnabled((value) => !value)} style={eventStyles.button}>
+          <Text>{enabled ? 'Disable handler' : 'Enable handler'}</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={eventStyles.interactionArea}>
+        <EventProvider>
+          <TouchableOpacity testID="inside-button" onPress={() => setInsidePressCount((count) => count + 1)} style={eventStyles.button}>
+            <Text>Inside</Text>
+          </TouchableOpacity>
+          {enabled ? <Listener mode={mode} onEvent={onEvent} /> : null}
+        </EventProvider>
+      </View>
+      <TouchableOpacity testID="outside-button" onPress={() => setOutsideCount((count) => count + 1)} style={eventStyles.button}>
+        <Text>Outside</Text>
+      </TouchableOpacity>
+      <Text testID="event-count">EVENT_COUNT_{eventCount}</Text>
+      <Text testID="inside-count">INSIDE_PRESS_COUNT_{insidePressCount}</Text>
+      <Text testID="outside-count">OUTSIDE_COUNT_{outsideCount}</Text>
+      <Text testID="event-mode">EVENT_MODE_{lastEventMode}</Text>
+      <TouchableOpacity testID="event-complete" style={eventStyles.button} onPress={onComplete}><Text>Continue to containment tests</Text></TouchableOpacity>
+    </View>
+  );
+}
+
+const eventStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    paddingTop: 64,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  controls: {
+    gap: 8,
+  },
+  interactionArea: {
+    height: 80,
+    gap: 8,
+  },
+  button: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: '#dddddd',
+  },
+});
+
+
 
 type NativeTarget = NativeElement | number;
 const touchableStyle = { minHeight: 44, justifyContent: 'center' as const };
@@ -121,6 +196,8 @@ const ForwardedBoundaryContent = forwardRef(BoundaryContent);
 export default function App() {
   const [ready, setReady] = useState(false);
   const [showContains, setShowContains] = useState(true);
+  const [eventComplete, setEventComplete] = useState(false);
+  if (!eventComplete) return <EventProbe onComplete={() => setEventComplete(true)} />;
   return (
     <PortalProvider shouldAddRootHost={false}>
       <View style={{ flex: 1 }}>
