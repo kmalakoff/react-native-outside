@@ -3,6 +3,11 @@ name: Native compatibility
 on:
   workflow_call:
     inputs:
+      profile:
+        required: false
+        default: current
+        description: current runs strict qualification; minimum is exploratory and peer-blocked; all runs both profiles
+        type: string
       candidate_package:
         required: true
         type: string
@@ -45,6 +50,7 @@ jobs:
           node-version: 26
       - name: Check candidate identity
         env:
+          NATIVE_PROFILE: ${{ inputs.profile }}
           CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
           CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
@@ -72,6 +78,7 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Check candidate identity
         env:
+          NATIVE_PROFILE: ${{ inputs.profile }}
           CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
           CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
@@ -91,13 +98,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: native-candidates
-          path: .tmp/native
+          path: |
+            .tmp/native/packages/*.tgz
+            .tmp/native/candidate-manifest.json
           if-no-files-found: error
           include-hidden-files: true
 
   current-android:
     name: Current Android native flow
     needs: package-candidates
+    if: inputs.profile == 'current' || inputs.profile == 'all'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -124,6 +134,9 @@ jobs:
         run: |
           export MAESTRO_VERSION=2.7.0
           curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Enable KVM
+        run: sudo chmod 666 /dev/kvm
       - name: Run current Android flow
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -147,6 +160,7 @@ jobs:
   current-ios:
     name: Current iOS native flow
     needs: package-candidates
+    if: inputs.profile == 'current' || inputs.profile == 'all'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -161,6 +175,10 @@ jobs:
         with:
           name: native-candidates
           path: .tmp/native
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
       - name: Install orchestration dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Prepare current fixture
@@ -195,6 +213,7 @@ jobs:
   minimum-android:
     name: Minimum Android feasibility
     needs: package-candidates
+    if: inputs.profile == 'minimum' || inputs.profile == 'all'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -224,6 +243,8 @@ jobs:
         env:
           NODE_OPTIONS: --openssl-legacy-provider
         run: npm run build:android
+      - name: Enable KVM
+        run: sudo chmod 666 /dev/kvm
       - name: Attempt minimum Android native build
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -242,6 +263,7 @@ jobs:
         run: |
           export MAESTRO_VERSION=2.7.0
           curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
       - name: Run minimum Android Maestro flow
         run: |
           export PATH="$HOME/.maestro/bin:$PATH"
@@ -256,7 +278,7 @@ jobs:
   minimum-ios:
     name: Minimum iOS feasibility
     needs: [package-candidates, minimum-android]
-    if: needs.minimum-android.result == 'success'
+    if: (inputs.profile == 'minimum' || inputs.profile == 'all') && needs.minimum-android.result == 'success'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -311,6 +333,7 @@ jobs:
     steps:
       - name: Report native results
         env:
+          PROFILE: ${{ inputs.profile }}
           VALIDATE: ${{ needs.validate-caller.result }}
           PACKAGE: ${{ needs.package-candidates.result }}
           CURRENT_ANDROID: ${{ needs.current-android.result }}
@@ -319,18 +342,38 @@ jobs:
           MINIMUM_IOS: ${{ needs.minimum-ios.result }}
         run: |
           {
-            echo "### Native compatibility caller status (current strict only)"
+            echo "### Native compatibility caller status ($PROFILE profile)"
             echo "- Caller validation: $VALIDATE"
             echo "- Candidate packaging: $PACKAGE"
             echo "- Current Android: $CURRENT_ANDROID"
             echo "- Current iOS: $CURRENT_IOS"
             echo "- Minimum Android feasibility (exploratory): $MINIMUM_ANDROID"
             echo "- Minimum iOS feasibility (exploratory): $MINIMUM_IOS"
-            echo "- Overall compatibility is not claimed by this pilot: the current profile is strict; the RN 0.59.10 profile is exploratory and peer-contract blocked because react-native-outside declares react-native >=0.82.1."
+            if [ "$PROFILE" = current ] || [ "$PROFILE" = all ]; then
+              echo "- Current profile is strict qualification for RN 0.87.1 and React 19.2.3."
+            else
+              echo "- Current profile skipped intentionally (profile=$PROFILE)."
+            fi
+            if [ "$PROFILE" = minimum ] || [ "$PROFILE" = all ]; then
+              echo "- Minimum profile is exploratory only; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1."
+            else
+              echo "- Minimum profile skipped intentionally (profile=$PROFILE)."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
           test "$VALIDATE" = success
           test "$PACKAGE" = success
-          test "$CURRENT_ANDROID" = success
-          test "$CURRENT_IOS" = success
-          test "$MINIMUM_ANDROID" = success
-          test "$MINIMUM_IOS" = success
+          if [ "$PROFILE" = current ]; then
+            test "$CURRENT_ANDROID" = success
+            test "$CURRENT_IOS" = success
+          elif [ "$PROFILE" = minimum ]; then
+            test "$MINIMUM_ANDROID" = success
+            test "$MINIMUM_IOS" = success
+          elif [ "$PROFILE" = all ]; then
+            test "$CURRENT_ANDROID" = success
+            test "$CURRENT_IOS" = success
+            test "$MINIMUM_ANDROID" = success
+            test "$MINIMUM_IOS" = success
+          else
+            echo "Unsupported native profile: $PROFILE" >&2
+            exit 1
+          fi

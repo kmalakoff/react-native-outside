@@ -8,12 +8,15 @@ const callerRepository = process.env.CALLER_REPOSITORY;
 const callerSha = process.env.CALLER_SHA;
 const pullRequestRepository = process.env.PULL_REQUEST_REPOSITORY;
 const pullRequestSha = process.env.PULL_REQUEST_SHA;
+const profile = process.env.NATIVE_PROFILE ?? 'current';
 
 const knownPackages = new Set(['react-native-contains', 'react-native-event', 'react-native-outside', 'react-ref-boundary']);
 
 function fail(message: string): never {
   throw new Error(message);
 }
+
+if (profile !== 'current' && profile !== 'minimum' && profile !== 'all') fail(`Unsupported native profile: ${profile}`);
 
 if (!packageName || !knownPackages.has(packageName)) fail(`Unknown native candidate package: ${packageName ?? '<missing>'}`);
 const canonicalRepository = `kmalakoff/${packageName}`;
