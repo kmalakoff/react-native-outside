@@ -60,7 +60,7 @@ function EventProbe({ onComplete }: { onComplete: () => void }) {
 const eventStyles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingTop: 64,
+    paddingTop: 120,
     paddingHorizontal: 24,
     gap: 8,
   },
@@ -202,7 +202,7 @@ export default function App() {
     <PortalProvider shouldAddRootHost={false}>
       <View style={{ flex: 1 }}>
         <EventProvider>
-          <View style={{ flex: 1, paddingTop: 64, paddingHorizontal: 24 }}>
+          <View style={{ flex: 1, paddingTop: 120, paddingHorizontal: 24 }}>
             {showContains ? <>
               <ContainsProbe />
               <TouchableOpacity style={touchableStyle} testID="contains-complete" onPress={() => setShowContains(false)}>
