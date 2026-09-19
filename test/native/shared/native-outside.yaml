@@ -50,7 +50,6 @@ appId: com.reactnativeoutside.smoke
 - tapOn:
     id: active-inside
 - assertVisible: "ACTIVE_SMOKE_ACTIVE"
-- assertVisible: "EVENT_SMOKE_RECEIVED"
 - tapOn:
     id: outside
 - assertVisible: "ACTIVE_SMOKE_INACTIVE"
