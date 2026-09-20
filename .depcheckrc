@@ -1,1 +1,2 @@
-ignores: ["react-native-outside", "node-version-use", "ts-dev-stack", "tsds-web-test-runner", "react", "react-*", "ts-swc-loaders"]
+ignores: ["assert", "react-native-outside", "node-version-use", "ts-dev-stack", "tsds-web-test-runner", "react", "react-*", "ts-swc-loaders"]
+ignore-patterns: ["test/native/**"]

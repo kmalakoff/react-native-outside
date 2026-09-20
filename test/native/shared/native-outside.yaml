@@ -1,0 +1,78 @@
+appId: com.reactnativeoutside.smoke
+---
+- launchApp:
+    clearState: true
+- assertVisible: "EVENT_COUNT_0"
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_1"
+- assertVisible: "EVENT_MODE_initial"
+- assertVisible: "INSIDE_PRESS_COUNT_1"
+- tapOn:
+    id: outside-button
+- assertVisible: "OUTSIDE_COUNT_1"
+- assertVisible: "EVENT_COUNT_1"
+- tapOn:
+    id: update-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_2"
+- assertVisible: "EVENT_MODE_updated"
+- assertVisible: "INSIDE_PRESS_COUNT_2"
+- tapOn:
+    id: toggle-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_2"
+- assertVisible: "INSIDE_PRESS_COUNT_3"
+- tapOn:
+    id: toggle-button
+- tapOn:
+    id: inside-button
+- assertVisible: "EVENT_COUNT_3"
+- assertVisible: "INSIDE_PRESS_COUNT_4"
+- tapOn:
+    id: event-complete
+- assertVisible: "CONTAINS_SMOKE_STATIC_PASS"
+- tapOn:
+    id: contains-event
+- assertVisible: "EVENT_SMOKE_RECEIVED"
+- assertVisible: "CONTAINS_SMOKE_EVENT_INSIDE"
+- tapOn:
+    id: contains-outside-event
+- assertVisible: "CONTAINS_SMOKE_EVENT_OUTSIDE"
+- tapOn:
+    id: contains-complete
+- assertVisible: "ACTIVE_SMOKE_INACTIVE"
+- tapOn:
+    id: active-toggle
+- assertVisible: "ACTIVE_SMOKE_ACTIVE"
+- tapOn:
+    id: active-inside
+- assertVisible: "ACTIVE_SMOKE_ACTIVE"
+- tapOn:
+    id: outside
+- assertVisible: "ACTIVE_SMOKE_INACTIVE"
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"
+- tapOn:
+    id: boundary-toggle
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: boundary-inside
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: registered-portal
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- assertVisible: "BOUNDARY_REGISTRY_REGISTERED"
+- tapOn:
+    id: boundary-cleanup
+- assertVisible: "BOUNDARY_REGISTRY_CLEAN"
+- tapOn:
+    id: unrelated-portal
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"
+- tapOn:
+    id: boundary-toggle
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: outside
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"

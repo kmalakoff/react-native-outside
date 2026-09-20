@@ -3,8 +3,82 @@ on:
   push:
     branches:
       - master
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_native:
+        description: Run the optional native compatibility workflow
+        type: boolean
+        required: false
+        default: false
+      native_profile:
+        description: Native profile; minimum and all include exploratory legacy testing; minimum-android is a compatibility alias
+        type: choice
+        default: current
+        options: [current, minimum, minimum-android, all]
+      native_platform:
+        description: Native platform to run
+        type: choice
+        default: both
+        options: [android, ios, both]
+      native_candidate_manifest:
+        description: Optional full native candidate manifest JSON for a coordinated canonical manual run
+        type: string
+        default: ''
 jobs:
+  candidate-packages:
+    name: Build reviewed sibling packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+      - uses: actions/checkout@v7
+        with:
+          repository: kmalakoff/react-native-contains
+          ref: 76b7094f5d1438ab74ef0fcb9581ef1b57b9539e
+          path: .tmp/candidates/react-native-contains
+      - name: Pack react-native-contains
+        working-directory: .tmp/candidates/react-native-contains
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../../packages
+          npm pack --ignore-scripts --pack-destination ../../packages
+      - uses: actions/checkout@v7
+        with:
+          repository: kmalakoff/react-native-event
+          ref: fd88e04db601152724ccd3d077b9b9c6a55e6db8
+          path: .tmp/candidates/react-native-event
+      - name: Pack react-native-event
+        working-directory: .tmp/candidates/react-native-event
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../../packages
+          npm pack --ignore-scripts --pack-destination ../../packages
+      - uses: actions/checkout@v7
+        with:
+          repository: kmalakoff/react-ref-boundary
+          ref: ac3c1bdd9fbd0e6adcd51056763d8ef3679f139d
+          path: .tmp/candidates/react-ref-boundary
+      - name: Pack react-ref-boundary
+        working-directory: .tmp/candidates/react-ref-boundary
+        run: |
+          npm ci
+          npm run build
+          mkdir -p ../../packages
+          npm pack --ignore-scripts --pack-destination ../../packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-sibling-packages
+          path: .tmp/packages/*.tgz
+          if-no-files-found: error
+          include-hidden-files: true
   test:
+    needs: candidate-packages
     name: Node.js ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -19,7 +93,34 @@ jobs:
       - run: git config --global user.name "Github Actions"
       - run: git config --global user.email "actions@users.noreply.github.com"
       - run: npm ci
-      - run: npx -y playwright install --with-deps
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-sibling-packages
+          path: .tmp/packages
+      - name: Install reviewed siblings
+        run: npm install --ignore-scripts --no-save --package-lock=false ./.tmp/packages/react-native-contains-1.0.16.tgz ./.tmp/packages/react-native-event-1.0.15.tgz ./.tmp/packages/react-ref-boundary-1.0.14.tgz
+      - run: npx -y playwright install --with-deps chromium
+        if: runner.os == 'Linux'
       - run: npm run prepublishOnly
       - run: npm run test
+        if: runner.os == 'Linux'
+      - run: npm run test:types
+        if: runner.os == 'Windows'
+      - run: npm run test:node
+        if: runner.os == 'Windows'
       - run: npm run test:engines
+  native-compatibility:
+    name: Native compatibility
+    if: github.event_name == 'workflow_dispatch' && inputs.run_native
+    uses: ./.github/workflows/native.yml
+    with:
+      profile: ${{ inputs.native_profile || 'current' }}
+      platform: ${{ inputs.native_platform || 'both' }}
+      candidate_package: react-native-outside
+      candidate_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+      candidate_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      candidate_manifest: ${{ inputs.native_candidate_manifest }}
+      fixture_repository: ${{ github.repository }}
+      fixture_sha: ${{ github.sha }}
+    permissions:
+      contents: read

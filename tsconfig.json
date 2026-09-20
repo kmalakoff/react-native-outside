@@ -2,11 +2,13 @@
   "extends": "tsds-config/tsconfig.json",
   "compilerOptions": {
     "outDir": "dist",
+    "strict": true,
     "lib": ["es2015", "dom"],
-    "jsx": "react-jsx",
+    "jsx": "react",
     "types": ["mocha", "node"],
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "customConditions": ["react-native-legacy-deep-imports"]
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules", "dist", "test/data"]
+  "exclude": ["node_modules", "dist", "test/data", "test/native", "test/browser", "test/types/profiles"]
 }

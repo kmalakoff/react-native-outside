@@ -1,0 +1,33 @@
+appId: com.reactnativeoutside.smoke
+---
+- launchApp:
+    clearState: true
+- assertVisible: "ACTIVE_SMOKE_INACTIVE"
+- tapOn:
+    id: active-toggle
+- assertVisible: "ACTIVE_SMOKE_ACTIVE"
+- tapOn:
+    id: active-inside
+- assertVisible: "ACTIVE_SMOKE_ACTIVE"
+- tapOn:
+    id: outside
+- assertVisible: "ACTIVE_SMOKE_INACTIVE"
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"
+- tapOn:
+    id: boundary-toggle
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: boundary-inside
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: registered-portal
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: unrelated-portal
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"
+- tapOn:
+    id: boundary-toggle
+- assertVisible: "BOUNDARY_SMOKE_ACTIVE"
+- tapOn:
+    id: outside
+- assertVisible: "BOUNDARY_SMOKE_INACTIVE"

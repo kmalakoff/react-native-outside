@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@types/react": "19.2.0",
+    "react": "19.2.3",
+    "react-native": "0.87.1",
+    "typescript": "5.9.3"
+  },
+  "name": "react-native-outside-types-current",
+  "private": true,
+  "type": "module"
+}

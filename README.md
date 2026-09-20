@@ -6,26 +6,26 @@ React components for react-native click outside
 npm install react-native-outside react-native-event react-native-contains react-ref-boundary
 ```
 
-The examples assume React Native 0.82 or newer, React, and Node.js 16 or newer.
+Requires React Native 0.82.1 or newer and a React version supported by that React Native release. The package's React peer floor is 16.8.0. The native fixture has passed locally on Android and iOS with React Native 0.87.1.
 
 For a react-dom version, check out [react-dom-outside](https://www.npmjs.com/package/react-dom-outside)
 
 ### Active component
 
 ```tsx
-import { forwardRef } from "react";
+import { forwardRef, type ComponentRef } from 'react';
 import { Text, TouchableOpacity, View } from "react-native";
-import { Active } from "react-native-outside";
-import { EventProvider } from "react-native-event";
+import { Active, type ActiveInjectedProps } from 'react-native-outside';
+import { EventProvider } from 'react-native-event';
 
-const Component = forwardRef(({ isActive, setIsActive }, ref) => {
+const Component = forwardRef<ComponentRef<typeof View>, Partial<ActiveInjectedProps>>(({ isActive, setIsActive }, ref) => {
   return (
     <View ref={ref}>
       <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
       <TouchableOpacity
         testID="toggle"
         onPress={function () {
-          setIsActive(!isActive);
+          setIsActive?.((current) => !current);
         }}
       />
     </View>
@@ -46,45 +46,43 @@ export default function App() {
 }
 ```
 
+`Active` accepts one non-Fragment child. That child must forward its ref to the native view that defines the inside area. The injected state setter accepts both boolean values and functional updates.
+
 ### Active boundary component
 
-For content rendered through a portal, install the portal provider used by this example:
+For content rendered through a portal, install the portal provider used by this example. Keep the portal host inside `EventProvider` so its presses enter the outside-event provider:
 
 ```sh
 npm install @gorhom/portal
 ```
 
 ```tsx
-import { forwardRef } from "react";
+import { forwardRef, type ComponentRef } from 'react';
 import { Text, TouchableOpacity, View } from "react-native";
-import { ActiveBoundary } from "react-native-outside";
-import { EventProvider } from "react-native-event";
-import { PortalProvider, Portal } from '@gorhom/portal';
+import { ActiveBoundary, type ActiveInjectedProps } from 'react-native-outside';
+import { EventProvider } from 'react-native-event';
+import { Portal, PortalHost, PortalProvider } from '@gorhom/portal';
 import { useRef as useBoundaryRef } from 'react-ref-boundary';
 
-// a modal for example outside the hierarchy
 const PortalComponent = () => {
-  const ref = useBoundaryRef(null); // react-ref-boundary ref
+  const ref = useBoundaryRef<ComponentRef<typeof View>>(null);
   return (
     <Portal>
-      <TouchableOpacity
-        ref={ref}
-        testID="portal-click"
-        onPress={() => { /* this click will not inactivate due to react-ref-boundary ref */ }}
-      />
+      <View ref={ref}>
+        <TouchableOpacity testID="portal-click" onPress={() => {}} />
+      </View>
     </Portal>
   );
 }
 
-// react-ref-boundary ref passed in
-const Component = forwardRef(({ isActive, setIsActive }, ref) => {
+const Component = forwardRef<ComponentRef<typeof View>, Partial<ActiveInjectedProps>>(({ isActive, setIsActive }, ref) => {
   return (
     <View ref={ref}>
       <Text testID="text">{isActive ? 'active' : 'not active'}</Text>
       <TouchableOpacity
         testID="toggle"
         onPress={function () {
-          setIsActive(!isActive);
+          setIsActive?.((current) => !current);
         }}
       />
       <PortalComponent/>
@@ -94,8 +92,9 @@ const Component = forwardRef(({ isActive, setIsActive }, ref) => {
 
 export default function App() {
   return (
-    <PortalProvider>
+    <PortalProvider shouldAddRootHost={false}>
       <EventProvider>
+        <PortalHost name="root" />
         <ActiveBoundary>
           <Component />
         </ActiveBoundary>
@@ -104,6 +103,16 @@ export default function App() {
   );
 }
 ```
+
+`ActiveBoundary` also accepts one non-Fragment child. Register additional portal content with `react-ref-boundary`; its host must be inside `EventProvider` so presses reach the outside-event provider.
+
+### Testing
+
+Run `npm test` for consumer types, browser interactions and Node helper checks,
+then `npm run test:engines` for export resolution on Node.js 16.0.0. The shared
+native fixture exercises real iOS and Android input, including registered and
+unrelated portals, locally and through manually requested GitHub Actions runs.
+See [local tests and manual Android/iOS CI](test/README.md).
 
 ### Documentation
 

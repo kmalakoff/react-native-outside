@@ -1,0 +1,10 @@
+{
+  "name": "react-native-outside-browser-react18",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native-web": "0.21.2"
+  }
+}
