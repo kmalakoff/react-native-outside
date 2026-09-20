@@ -23,8 +23,8 @@ if (profile !== 'current' && profile !== 'minimum') {
 const fixtureRoot = resolve(repository, '.tmp/native/fixtures');
 const expectedFixture = join(fixtureRoot, profile);
 const fixture = resolve(values.fixture ?? expectedFixture);
-if (fixture !== expectedFixture) {
-  throw new Error(`Fixture must be the profile scratch path ${expectedFixture}`);
+if (resolve(fixture, '..') !== fixtureRoot) {
+  throw new Error(`Fixture must be a direct child of the scratch directory ${fixtureRoot}`);
 }
 const manifestPath = resolve(values.manifest ?? '.tmp/native/candidate-manifest.json');
 const packageDirectory = resolve(values.packages ?? '.tmp/native/packages');
@@ -65,6 +65,7 @@ cpSync(sourceProject, fixture, {
       .some((segment) => excludedSegments.has(segment)),
 });
 if (profile === 'minimum') mkdirSync(join(fixture, 'android/app/src/main/assets'), { recursive: true });
+mkdirSync(join(fixture, 'dist'), { recursive: true });
 
 const appTsx = join(fixture, 'App.tsx');
 const appJs = join(fixture, 'App.js');

@@ -6,11 +6,21 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      run_native:
+        description: Run the optional native compatibility workflow
+        type: boolean
+        required: false
+        default: false
       native_profile:
-        description: Native profile; minimum, minimum-android, and all include exploratory legacy testing
+        description: Native profile; minimum and all include exploratory legacy testing; minimum-android is a compatibility alias
         type: choice
         default: current
         options: [current, minimum, minimum-android, all]
+      native_platform:
+        description: Native platform to run
+        type: choice
+        default: both
+        options: [android, ios, both]
       native_candidate_manifest:
         description: Optional full native candidate manifest JSON for a coordinated canonical manual run
         type: string
@@ -28,7 +38,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: kmalakoff/react-native-contains
-          ref: 39990aeb9e4457bbc87db275f30b306308b63eca
+          ref: 76b7094f5d1438ab74ef0fcb9581ef1b57b9539e
           path: .tmp/candidates/react-native-contains
       - name: Pack react-native-contains
         working-directory: .tmp/candidates/react-native-contains
@@ -40,7 +50,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: kmalakoff/react-native-event
-          ref: 19be7f009f1220318d1a1f4f01eb20c40e36f071
+          ref: fd88e04db601152724ccd3d077b9b9c6a55e6db8
           path: .tmp/candidates/react-native-event
       - name: Pack react-native-event
         working-directory: .tmp/candidates/react-native-event
@@ -52,7 +62,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: kmalakoff/react-ref-boundary
-          ref: e3b18914c5bca416186dc52a714fc865ce264e2b
+          ref: ac3c1bdd9fbd0e6adcd51056763d8ef3679f139d
           path: .tmp/candidates/react-ref-boundary
       - name: Pack react-ref-boundary
         working-directory: .tmp/candidates/react-ref-boundary
@@ -95,9 +105,11 @@ jobs:
       - run: npm run test:engines
   native-compatibility:
     name: Native compatibility
+    if: github.event_name == 'workflow_dispatch' && inputs.run_native
     uses: ./.github/workflows/native.yml
     with:
       profile: ${{ inputs.native_profile || 'current' }}
+      platform: ${{ inputs.native_platform || 'both' }}
       candidate_package: react-native-outside
       candidate_repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
       candidate_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}

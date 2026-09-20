@@ -6,7 +6,12 @@ on:
       profile:
         required: false
         default: current
-        description: current runs strict qualification; minimum is exploratory and peer-blocked; minimum-android runs only the Android probe; all runs both profiles
+        description: current runs strict qualification; minimum is exploratory and peer-blocked; all runs both profiles; minimum-android remains as a compatibility alias
+        type: string
+      platform:
+        required: false
+        default: both
+        description: Run Android, iOS, or both for the selected profile
         type: string
       candidate_package:
         required: true
@@ -52,6 +57,7 @@ jobs:
       - name: Check candidate identity
         env:
           NATIVE_PROFILE: ${{ inputs.profile }}
+          NATIVE_PLATFORM: ${{ inputs.platform }}
           CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
           CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
@@ -80,6 +86,7 @@ jobs:
       - name: Check candidate identity
         env:
           NATIVE_PROFILE: ${{ inputs.profile }}
+          NATIVE_PLATFORM: ${{ inputs.platform }}
           CANDIDATE_PACKAGE: ${{ inputs.candidate_package }}
           CANDIDATE_REPOSITORY: ${{ inputs.candidate_repository }}
           CANDIDATE_SHA: ${{ inputs.candidate_sha }}
@@ -111,7 +118,7 @@ jobs:
   current-android:
     name: Current Android native flow
     needs: package-candidates
-    if: inputs.profile == 'current' || inputs.profile == 'all'
+    if: (inputs.profile == 'current' || inputs.profile == 'all') && (inputs.platform == 'android' || inputs.platform == 'both')
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -164,7 +171,7 @@ jobs:
   current-ios:
     name: Current iOS native flow
     needs: package-candidates
-    if: inputs.profile == 'current' || inputs.profile == 'all'
+    if: (inputs.profile == 'current' || inputs.profile == 'all') && (inputs.platform == 'ios' || inputs.platform == 'both')
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -217,7 +224,7 @@ jobs:
   minimum-android:
     name: Minimum Android feasibility
     needs: package-candidates
-    if: inputs.profile == 'minimum' || inputs.profile == 'minimum-android' || inputs.profile == 'all'
+    if: inputs.profile == 'minimum-android' || ((inputs.profile == 'minimum' || inputs.profile == 'all') && (inputs.platform == 'android' || inputs.platform == 'both'))
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -284,8 +291,8 @@ jobs:
 
   minimum-ios:
     name: Minimum iOS feasibility
-    needs: [package-candidates, minimum-android]
-    if: (inputs.profile == 'minimum' || inputs.profile == 'all') && needs.minimum-android.result == 'success'
+    needs: [package-candidates]
+    if: (inputs.profile == 'minimum' || inputs.profile == 'all') && (inputs.platform == 'ios' || inputs.platform == 'both')
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -341,6 +348,7 @@ jobs:
       - name: Report native results
         env:
           PROFILE: ${{ inputs.profile }}
+          PLATFORM: ${{ inputs.platform }}
           VALIDATE: ${{ needs.validate-caller.result }}
           PACKAGE: ${{ needs.package-candidates.result }}
           CURRENT_ANDROID: ${{ needs.current-android.result }}
@@ -348,43 +356,57 @@ jobs:
           MINIMUM_ANDROID: ${{ needs.minimum-android.result }}
           MINIMUM_IOS: ${{ needs.minimum-ios.result }}
         run: |
-          {
-            echo "### Native compatibility caller status ($PROFILE profile)"
-            echo "- Caller validation: $VALIDATE"
-            echo "- Candidate packaging: $PACKAGE"
-            echo "- Current Android: $CURRENT_ANDROID"
-            echo "- Current iOS: $CURRENT_IOS"
-            echo "- Minimum Android feasibility (exploratory): $MINIMUM_ANDROID"
-            echo "- Minimum iOS feasibility (exploratory): $MINIMUM_IOS"
-            if [ "$PROFILE" = current ] || [ "$PROFILE" = all ]; then
-              echo "- Current profile is strict qualification for RN 0.87.1 and React 19.2.3."
-            else
-              echo "- Current profile skipped intentionally (profile=$PROFILE)."
-            fi
-            if [ "$PROFILE" = minimum ] || [ "$PROFILE" = all ]; then
-              echo "- Minimum profile is exploratory only; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1."
-            elif [ "$PROFILE" = minimum-android ]; then
-              echo "- Minimum Android-only probe is exploratory; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1. Minimum iOS is skipped."
-            else
-              echo "- Minimum profile skipped intentionally (profile=$PROFILE)."
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-          test "$VALIDATE" = success
-          test "$PACKAGE" = success
-          if [ "$PROFILE" = current ]; then
-            test "$CURRENT_ANDROID" = success
-            test "$CURRENT_IOS" = success
-          elif [ "$PROFILE" = minimum ]; then
-            test "$MINIMUM_ANDROID" = success
-            test "$MINIMUM_IOS" = success
-          elif [ "$PROFILE" = minimum-android ]; then
-            test "$MINIMUM_ANDROID" = success
-          elif [ "$PROFILE" = all ]; then
-            test "$CURRENT_ANDROID" = success
-            test "$CURRENT_IOS" = success
-            test "$MINIMUM_ANDROID" = success
-            test "$MINIMUM_IOS" = success
-          else
+          if [ "$PROFILE" != current ] && [ "$PROFILE" != minimum ] && [ "$PROFILE" != minimum-android ] && [ "$PROFILE" != all ]; then
             echo "Unsupported native profile: $PROFILE" >&2
             exit 1
           fi
+          if [ "$PLATFORM" != android ] && [ "$PLATFORM" != ios ] && [ "$PLATFORM" != both ]; then
+            echo "Unsupported native platform: $PLATFORM" >&2
+            exit 1
+          fi
+          if [ "$PROFILE" = minimum-android ] && [ "$PLATFORM" = ios ]; then
+            echo "The minimum-android profile cannot be combined with the ios platform." >&2
+            exit 1
+          fi
+
+          EFFECTIVE_PLATFORM=$PLATFORM
+          if [ "$PROFILE" = minimum-android ]; then EFFECTIVE_PLATFORM=android; fi
+          RUN_CURRENT=false
+          RUN_MINIMUM=false
+          if [ "$PROFILE" = current ] || [ "$PROFILE" = all ]; then RUN_CURRENT=true; fi
+          if [ "$PROFILE" = minimum ] || [ "$PROFILE" = minimum-android ] || [ "$PROFILE" = all ]; then RUN_MINIMUM=true; fi
+          RUN_ANDROID=false
+          RUN_IOS=false
+          if [ "$EFFECTIVE_PLATFORM" = android ] || [ "$EFFECTIVE_PLATFORM" = both ]; then RUN_ANDROID=true; fi
+          if [ "$EFFECTIVE_PLATFORM" = ios ] || [ "$EFFECTIVE_PLATFORM" = both ]; then RUN_IOS=true; fi
+
+          STATUS_FAILED=false
+          report_cell() {
+            if [ "$3" = true ]; then
+              echo "- $1: requested ($2)" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$2" != success ]; then STATUS_FAILED=true; fi
+            else
+              echo "- $1: excluded by profile/platform (profile=$PROFILE, platform=$EFFECTIVE_PLATFORM; job result=$2)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+
+          {
+            echo "### Native compatibility caller status"
+            echo "- Selected profile: $PROFILE"
+            echo "- Selected platform: $EFFECTIVE_PLATFORM"
+            echo "- Caller validation: $VALIDATE"
+            echo "- Candidate packaging: $PACKAGE"
+          } >> "$GITHUB_STEP_SUMMARY"
+          report_cell "Current Android" "$CURRENT_ANDROID" "$([ "$RUN_CURRENT" = true ] && [ "$RUN_ANDROID" = true ] && echo true || echo false)"
+          report_cell "Current iOS" "$CURRENT_IOS" "$([ "$RUN_CURRENT" = true ] && [ "$RUN_IOS" = true ] && echo true || echo false)"
+          report_cell "Minimum Android feasibility (exploratory)" "$MINIMUM_ANDROID" "$([ "$RUN_MINIMUM" = true ] && [ "$RUN_ANDROID" = true ] && echo true || echo false)"
+          report_cell "Minimum iOS feasibility (exploratory)" "$MINIMUM_IOS" "$([ "$RUN_MINIMUM" = true ] && [ "$RUN_IOS" = true ] && echo true || echo false)"
+          if [ "$RUN_CURRENT" = true ]; then
+            echo "- Current profile is strict qualification for RN 0.87.1 and React 19.2.3." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$RUN_MINIMUM" = true ]; then
+            echo "- Minimum profile is exploratory only; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "$VALIDATE" != success ] || [ "$PACKAGE" != success ]; then STATUS_FAILED=true; fi
+          if [ "$STATUS_FAILED" = true ]; then exit 1; fi

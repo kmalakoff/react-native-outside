@@ -9,6 +9,7 @@ const callerSha = process.env.CALLER_SHA;
 const pullRequestRepository = process.env.PULL_REQUEST_REPOSITORY;
 const pullRequestSha = process.env.PULL_REQUEST_SHA;
 const profile = process.env.NATIVE_PROFILE ?? 'current';
+const platform = process.env.NATIVE_PLATFORM ?? 'both';
 
 const knownPackages = new Set(['react-native-contains', 'react-native-event', 'react-native-outside', 'react-ref-boundary']);
 
@@ -18,6 +19,12 @@ function fail(message: string): never {
 
 if (profile !== 'current' && profile !== 'minimum' && profile !== 'minimum-android' && profile !== 'all') {
   fail(`Unsupported native profile: ${profile}`);
+}
+if (platform !== 'android' && platform !== 'ios' && platform !== 'both') {
+  fail(`Unsupported native platform: ${platform}`);
+}
+if (profile === 'minimum-android' && platform === 'ios') {
+  fail('The minimum-android profile cannot be combined with the ios platform');
 }
 
 if (!packageName || !knownPackages.has(packageName)) fail(`Unknown native candidate package: ${packageName ?? '<missing>'}`);
