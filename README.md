@@ -113,7 +113,8 @@ export default function App() {
 Run `npm test` for consumer types, browser interactions and Node helper checks,
 then `npm run test:engines` for export resolution on Node.js 16.0.0. The shared
 native fixture exercises real iOS and Android input, including registered and
-unrelated portals, in GitHub Actions. See the [compatibility matrix](test/README.md).
+unrelated portals, locally and through manually requested GitHub Actions runs.
+See [local tests and manual Android/iOS CI](test/README.md).
 
 ### Documentation
 

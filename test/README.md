@@ -67,16 +67,58 @@ NODE_OPTIONS=--openssl-legacy-provider SIMULATOR_UDID=<booted-simulator-udid> no
 
 This opt-in verifies the RN source hash and corrects one Objective-C generic annotation in the disposable installation. It builds Release with an iOS 15 deployment target and legacy compiler warning settings. Release avoids RN 0.59's debug fishhook crash on modern iOS. The fixture uses a single scene and embeds its JavaScript bundle. All interaction assertions remain enabled. A passing result proves this patched-RN probe, not an unmodified RN 0.59 iOS installation or compatibility with historical iOS versions. The RN peer override remains exploratory.
 
-## Optional native CI
+## Run Android and iOS manually on GitHub Actions
 
-Pushes and pull requests run package checks on Ubuntu and Windows. Native jobs run only when explicitly selected in a manual **CI** workflow dispatch. In GitHub Actions, choose **Run workflow**, enable `run_native`, then select `native_profile` and `native_platform`. Native testing is not a routine required check.
+Native CI is **manual only**. Pushes and pull requests run the Ubuntu/Windows package checks. A manual run also runs those checks and adds only the native profiles/platforms you select.
 
-The CLI equivalent for the current Android fixture is:
+### GitHub website
+
+1. Open [Actions → CI](https://github.com/kmalakoff/react-native-outside/actions/workflows/main.yml).
+2. Choose **Run workflow**, then select `worktree-compatibility-matrix` under **Use workflow from**. These changes are on that branch; use `master` after they are merged.
+3. Enable **run_native**.
+4. Set **native_platform** to `android`, `ios`, or `both`.
+5. Set **native_profile** using the table below, then click **Run workflow**.
+
+| Profile | What runs |
+| --- | --- |
+| `current` | RN 0.87.1 / React 19.2.3 |
+| `minimum` | Legacy RN 0.59.10 / React 16.8.3, with the compatibility setup described above |
+| `all` | Both dependency profiles |
+
+`minimum-android` is an older alias for legacy Android only. Prefer `minimum` plus `native_platform=android`.
+
+### GitHub CLI
+
+Authenticate with `gh auth login` and use an account with permission to run this repository's workflows. Run either command independently:
 
 ```sh
-gh workflow run main.yml --repo kmalakoff/react-native-outside --ref <candidate-branch> -f run_native=true -f native_profile=current -f native_platform=android
+# Android, current React Native
+gh workflow run main.yml --repo kmalakoff/react-native-outside --ref worktree-compatibility-matrix -f run_native=true -f native_profile=current -f native_platform=android
+
+# iOS, current React Native
+gh workflow run main.yml --repo kmalakoff/react-native-outside --ref worktree-compatibility-matrix -f run_native=true -f native_profile=current -f native_platform=ios
+
+# Android and iOS, both current and legacy React Native
+gh workflow run main.yml --repo kmalakoff/react-native-outside --ref worktree-compatibility-matrix -f run_native=true -f native_profile=all -f native_platform=both
 ```
 
-Use `ios` or `both` for the platform, and `minimum` or `all` for exploratory legacy coverage. The older `minimum-android` profile selects only legacy Android and rejects an `ios` platform selection. Minimum results remain exploratory until the peer contract and native behavior are both qualified.
+After dispatch, find the run and follow it:
 
-A canonical outside dispatch may also supply `native_candidate_manifest` with exact repository/SHA entries for all four packages. Without that input, the workflow uses the tracked sibling baseline plus the selected branch's outside candidate. Each run records packaged artifact identities and reports requested cells separately from excluded cells. An excluded platform is not a passing result.
+```sh
+gh run list --repo kmalakoff/react-native-outside --workflow main.yml --branch worktree-compatibility-matrix --event workflow_dispatch --limit 5
+gh run watch RUN_ID --repo kmalakoff/react-native-outside --exit-status
+```
+
+Replace `RUN_ID` with the ID from the list. The final native status must pass for every selected combination. Jobs for excluded platforms/profiles are skipped intentionally. Open a failed job's logs and download its diagnostic artifacts from the run page.
+
+The workflow installs native tooling on GitHub's Android/Linux and iOS/macOS runners. Your local emulator or simulator does not need to be running. Legacy iOS automatically uses the explicit compiler-compatibility option; no manual RN patch is needed on the runner.
+
+The same inputs are available in `react-native-event`, `react-native-contains`, and `react-ref-boundary`. Dispatch in the repository whose candidate you want to test: its commit is combined with the pinned cooperating packages and shared fixture.
+
+For a coordinated run replacing all four packages, outside also accepts `native_candidate_manifest` with exact repository/SHA entries. Without that input, outside uses the tracked sibling baseline plus the selected branch's own candidate. Each run records package identities and archive hashes.
+
+## What the completed matrix proves
+
+Both profiles passed all 30 native assertions and 22 taps locally on Android and iOS. Current native testing uses the standard RN installation. Legacy iOS uses the documented compiler correction and modern test-app host so RN 0.59 can run with current Xcode. This is a test configuration, not a change to the packages' advertised support ranges. `react-native-outside` continues to declare RN >=0.82.1; installing it into the legacy test fixture deliberately overrides that declaration.
+
+The manual CI entry points are implemented. The latest native changes were validated locally; no new hosted native run was requested. Earlier hosted results do not replace validation of a newly dispatched run.
