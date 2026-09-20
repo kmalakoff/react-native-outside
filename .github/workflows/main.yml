@@ -100,8 +100,14 @@ jobs:
       - name: Install reviewed siblings
         run: npm install --ignore-scripts --no-save --package-lock=false ./.tmp/packages/react-native-contains-1.0.16.tgz ./.tmp/packages/react-native-event-1.0.15.tgz ./.tmp/packages/react-ref-boundary-1.0.14.tgz
       - run: npx -y playwright install --with-deps chromium
+        if: runner.os == 'Linux'
       - run: npm run prepublishOnly
       - run: npm run test
+        if: runner.os == 'Linux'
+      - run: npm run test:types
+        if: runner.os == 'Windows'
+      - run: npm run test:node
+        if: runner.os == 'Windows'
       - run: npm run test:engines
   native-compatibility:
     name: Native compatibility
