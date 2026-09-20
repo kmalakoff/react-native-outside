@@ -143,12 +143,14 @@ function ActiveContent({ isActive, setIsActive }: Partial<ActiveInjectedProps>, 
 const ForwardedActiveContent = forwardRef(ActiveContent);
 
 function RegisteredPortal() {
-  const registeredRef = useBoundaryRef<ComponentRef<typeof TouchableOpacity> | null>(null);
+  const registeredRef = useBoundaryRef<ComponentRef<typeof View> | null>(null);
   return (
     <Portal>
-      <TouchableOpacity style={touchableStyle} ref={registeredRef} testID="registered-portal" onPress={() => {}}>
-        <Text>Registered portal</Text>
-      </TouchableOpacity>
+      <View ref={registeredRef}>
+        <TouchableOpacity style={touchableStyle} testID="registered-portal" onPress={() => {}}>
+          <Text>Registered portal</Text>
+        </TouchableOpacity>
+      </View>
     </Portal>
   );
 }

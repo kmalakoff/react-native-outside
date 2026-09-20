@@ -45,7 +45,9 @@ For the legacy fixture, prepare `--profile minimum` in `.tmp/native/fixtures/loc
 NODE_OPTIONS=--openssl-legacy-provider node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/local-android-minimum --android-gradle-java-home "$LEGACY_JAVA_HOME"
 ```
 
-`LEGACY_JAVA_HOME` is the installed Java 8 home selected for this run. The runner bundles JavaScript, builds and installs the app, then executes every Maestro assertion.
+`LEGACY_JAVA_HOME` is the installed Java 8 home selected for this run. Use a maintained Java 8 build: local validation used Temurin 8u504; 8u112 failed certificate validation while downloading Gradle. Keep Java 17 as the default for Maestro. The runner bundles JavaScript, builds and installs the app, then executes every Maestro assertion.
+
+Register native host views with boundary refs. The shared portal fixture registers a `View` around its button because RN 0.59's `TouchableOpacity` ref exposes a component instance rather than the native view required for containment.
 
 ### iOS
 
