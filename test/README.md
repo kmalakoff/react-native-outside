@@ -59,6 +59,14 @@ SIMULATOR_UDID=<booted-simulator-udid> node test/integration/native/run-platform
 
 Run the minimum fixture separately after checking that its old native toolchain can build on the selected Mac. Android success does not establish iOS compatibility. Preserve build, install and interaction results separately, including the exact candidate identities and device/toolchain versions.
 
+The RN 0.59.10 iOS probe requires explicit compiler compatibility on modern Xcode:
+
+```sh
+NODE_OPTIONS=--openssl-legacy-provider SIMULATOR_UDID=<booted-simulator-udid> node test/integration/native/run-platform.ts --platform ios --fixture .tmp/native/fixtures/local-ios-minimum --legacy-ios-xcode-compat
+```
+
+This opt-in verifies the RN source hash and corrects one Objective-C generic annotation in the disposable installation. It builds Release with an iOS 15 deployment target and legacy compiler warning settings. Release avoids RN 0.59's debug fishhook crash on modern iOS. The fixture uses a single scene and embeds its JavaScript bundle. All interaction assertions remain enabled. A passing result proves this patched-RN probe, not an unmodified RN 0.59 iOS installation or compatibility with historical iOS versions. The RN peer override remains exploratory.
+
 ## Optional native CI
 
 Pushes and pull requests run package checks on Ubuntu and Windows. Native jobs run only when explicitly selected in a manual **CI** workflow dispatch. In GitHub Actions, choose **Run workflow**, enable `run_native`, then select `native_profile` and `native_platform`. Native testing is not a routine required check.

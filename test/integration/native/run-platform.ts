@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
-import { delimiter, join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { delimiter, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
@@ -11,6 +12,7 @@ const { values } = parseArgs({
     'android-gradle-java-home': { type: 'string' },
     'skip-build': { type: 'boolean' },
     'skip-maestro': { type: 'boolean' },
+    'legacy-ios-xcode-compat': { type: 'boolean' },
   },
 });
 const platform = values.platform;
@@ -51,8 +53,59 @@ function resolveAndroidDevice(): string {
 
 if (!platform || !['android', 'ios'].includes(platform)) throw new Error('Pass --platform android or ios');
 const app = JSON.parse(readFileSync(join(fixture, 'app.json'), 'utf8')) as { name: string; android: { package: string }; ios: { bundleIdentifier: string } };
+const legacyIOSXcodeCompat = Boolean(values['legacy-ios-xcode-compat']);
+
+function applyLegacyIOSXcodeCompat(): void {
+  if (platform !== 'ios') throw new Error('--legacy-ios-xcode-compat is only supported for iOS');
+  if (app.name !== 'NativeMatrixMinimum') throw new Error('--legacy-ios-xcode-compat is only supported for the NativeMatrixMinimum fixture');
+
+  const reactNativePackagePath = join(fixture, 'node_modules/react-native/package.json');
+  if (!existsSync(reactNativePackagePath)) {
+    throw new Error('--legacy-ios-xcode-compat requires installed React Native 0.59.10 in the fixture');
+  }
+  const reactNativePackage = JSON.parse(readFileSync(reactNativePackagePath, 'utf8')) as { version?: string };
+  if (reactNativePackage.version !== '0.59.10') {
+    throw new Error(`--legacy-ios-xcode-compat requires React Native 0.59.10, found ${reactNativePackage.version ?? '<unknown>'}`);
+  }
+
+  const bridgePath = join(fixture, 'node_modules/react-native/React/CxxBridge/RCTCxxBridge.mm');
+  if (!existsSync(bridgePath)) throw new Error('--legacy-ios-xcode-compat could not find the RN 0.59.10 RCTCxxBridge.mm source');
+  const fixtureRealPath = realpathSync(fixture);
+  const bridgeRealPath = realpathSync(bridgePath);
+  const bridgeRelativePath = relative(fixtureRealPath, bridgeRealPath);
+  if (isAbsolute(bridgeRelativePath) || bridgeRelativePath === '..' || bridgeRelativePath.startsWith(`..${sep}`)) {
+    throw new Error('--legacy-ios-xcode-compat refuses to patch a source file outside the fixture');
+  }
+
+  // Pin both the saved RN 0.59.10 source and its sole exploratory annotation edit.
+  const stockSHA256 = '138a74557cc63713ad755f5c4796c89f2154738c1bca9f1139742b24e39c1cad';
+  const patchedSHA256 = '9d72c849501515b0ff7c070a76f3962adb41d67dab89472c924ae6961df37885';
+  const originalAnnotation = '- (NSArray<RCTModuleData *> *)_initializeModules:(NSArray<id<RCTBridgeModule>> *)modules';
+  const patchedAnnotation = '- (NSArray<RCTModuleData *> *)_initializeModules:(NSArray<Class> *)modules';
+  const source = readFileSync(bridgeRealPath, 'utf8');
+  const sourceSHA256 = createHash('sha256').update(source).digest('hex');
+  if (sourceSHA256 === patchedSHA256) {
+    console.log(`Exploratory iOS Xcode compatibility enabled for React Native 0.59.10; RCTCxxBridge annotation patch SHA-256 ${patchedSHA256} is already applied.`);
+    return;
+  }
+  if (sourceSHA256 !== stockSHA256) {
+    throw new Error(`--legacy-ios-xcode-compat found unexpected RCTCxxBridge.mm SHA-256 ${sourceSHA256}`);
+  }
+  if (source.split(originalAnnotation).length - 1 !== 1) {
+    throw new Error('--legacy-ios-xcode-compat expected exactly one known _initializeModules annotation');
+  }
+
+  const patchedSource = source.replace(originalAnnotation, patchedAnnotation);
+  if (createHash('sha256').update(patchedSource).digest('hex') !== patchedSHA256) {
+    throw new Error('--legacy-ios-xcode-compat generated an unexpected RCTCxxBridge.mm patch');
+  }
+  writeFileSync(bridgeRealPath, patchedSource);
+  console.log(`Exploratory iOS Xcode compatibility enabled for React Native 0.59.10; verified stock SHA-256 ${stockSHA256} and applied RCTCxxBridge annotation patch SHA-256 ${patchedSHA256}.`);
+}
 
 if (androidGradleJavaHome && platform !== 'android') throw new Error('--android-gradle-java-home is only supported for Android');
+if (legacyIOSXcodeCompat) applyLegacyIOSXcodeCompat();
+
 if (androidGradleJavaHome) {
   const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
   if (!existsSync(join(androidGradleJavaHome, 'bin', javaExecutable))) {
@@ -61,7 +114,12 @@ if (androidGradleJavaHome) {
 }
 
 if (!values['skip-build']) {
-  run('npm', ['run', platform === 'android' ? 'build:android' : 'build:ios'], fixture);
+  const buildArgs = ['run', platform === 'android' ? 'build:android' : 'build:ios'];
+  if (legacyIOSXcodeCompat) buildArgs.push('--', '--max-workers', '1');
+  run('npm', buildArgs, fixture, {
+    ...process.env,
+    ...(legacyIOSXcodeCompat ? { NODE_OPTIONS: [process.env.NODE_OPTIONS, '--openssl-legacy-provider'].filter(Boolean).join(' ') } : {}),
+  });
 }
 
 if (platform === 'android') {
@@ -82,9 +140,11 @@ if (platform === 'android') {
   const workspace = join(fixture, `ios/${app.name}.xcworkspace`);
   const project = join(fixture, `ios/${app.name}.xcodeproj`);
   const xcodeContainer = existsSync(workspace) ? ['-workspace', workspace] : ['-project', project];
-  run('xcodebuild', [...xcodeContainer, '-scheme', app.name, '-configuration', 'Debug', '-sdk', 'iphonesimulator', '-destination', `id=${simulator}`, '-derivedDataPath', derivedData, 'build'], fixture);
+  const configuration = legacyIOSXcodeCompat ? 'Release' : 'Debug';
+  const legacyIOSXcodeSettings = legacyIOSXcodeCompat ? ['IPHONEOS_DEPLOYMENT_TARGET=15.0', 'CLANG_WARN_STRICT_PROTOTYPES=NO', 'OTHER_CFLAGS=$(inherited) -Wno-error'] : [];
+  run('xcodebuild', [...xcodeContainer, '-scheme', app.name, '-configuration', configuration, '-sdk', 'iphonesimulator', '-destination', `id=${simulator}`, '-derivedDataPath', derivedData, ...legacyIOSXcodeSettings, 'build'], fixture);
   const nativeAppName = app.name === 'OutsideSmoke' ? 'ReactTestApp' : app.name;
-  const appPath = join(derivedData, `Build/Products/Debug-iphonesimulator/${nativeAppName}.app`);
+  const appPath = join(derivedData, `Build/Products/${configuration}-iphonesimulator/${nativeAppName}.app`);
   run('xcrun', ['simctl', 'install', simulator, appPath], fixture);
   run('xcrun', ['simctl', 'launch', simulator, app.ios.bundleIdentifier], fixture);
   if (!values['skip-maestro']) run('maestro', ['--device', simulator, 'test', flow], fixture);
