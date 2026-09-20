@@ -252,7 +252,9 @@ jobs:
         working-directory: .tmp/native/fixtures/minimum
         env:
           NODE_OPTIONS: --openssl-legacy-provider
-        run: npm run build:android
+        run: |
+          npm run build:android
+          node --check --input-type=commonjs < android/app/src/main/assets/index.android.bundle
       - name: Install Maestro
         run: |
           export MAESTRO_VERSION=2.7.0

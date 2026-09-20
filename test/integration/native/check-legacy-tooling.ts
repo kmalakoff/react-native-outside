@@ -16,7 +16,7 @@ const transformer = version('metro-react-native-babel-transformer');
 const register = version('metro-babel-register');
 if (!babel.startsWith('7.')) throw new Error(`RN 0.59 requires Babel 7, got ${babel}`);
 for (const [name, actual, expected] of [
-  ['metro-react-native-babel-preset', preset, '0.51.1'],
+  ['metro-react-native-babel-preset', preset, '0.59.0'],
   ['metro-react-native-babel-transformer', transformer, '0.51.0'],
   ['metro-babel-register', register, '0.51.0'],
 ]) {
