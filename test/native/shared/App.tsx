@@ -29,7 +29,7 @@ function EventProbe({ onComplete }: { onComplete: () => void }) {
 
   return (
     <View style={eventStyles.root}>
-      <View style={eventStyles.controls}>
+      <View>
         <TouchableOpacity testID="update-button" onPress={() => setMode('updated')} style={eventStyles.button}>
           <Text>Update handler</Text>
         </TouchableOpacity>
@@ -62,14 +62,9 @@ const eventStyles = StyleSheet.create({
     flex: 1,
     paddingTop: 120,
     paddingHorizontal: 24,
-    gap: 8,
-  },
-  controls: {
-    gap: 8,
   },
   interactionArea: {
     height: 80,
-    gap: 8,
   },
   button: {
     minHeight: 44,
