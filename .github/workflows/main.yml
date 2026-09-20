@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       native_profile:
-        description: Native profile; minimum and all include exploratory legacy testing
+        description: Native profile; minimum, minimum-android, and all include exploratory legacy testing
         type: choice
         default: current
-        options: [current, minimum, all]
+        options: [current, minimum, minimum-android, all]
       native_candidate_manifest:
         description: Optional full native candidate manifest JSON for a coordinated canonical manual run
         type: string

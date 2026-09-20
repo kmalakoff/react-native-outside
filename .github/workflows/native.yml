@@ -6,7 +6,7 @@ on:
       profile:
         required: false
         default: current
-        description: current runs strict qualification; minimum is exploratory and peer-blocked; all runs both profiles
+        description: current runs strict qualification; minimum is exploratory and peer-blocked; minimum-android runs only the Android probe; all runs both profiles
         type: string
       candidate_package:
         required: true
@@ -217,7 +217,7 @@ jobs:
   minimum-android:
     name: Minimum Android feasibility
     needs: package-candidates
-    if: inputs.profile == 'minimum' || inputs.profile == 'all'
+    if: inputs.profile == 'minimum' || inputs.profile == 'minimum-android' || inputs.profile == 'all'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -229,9 +229,15 @@ jobs:
         with:
           node-version: 26
       - uses: actions/setup-java@v5
+        id: legacy-java
         with:
           distribution: temurin
           java-version: '8'
+      - uses: actions/setup-java@v5
+        id: current-java
+        with:
+          distribution: temurin
+          java-version: '17'
       - uses: actions/download-artifact@v4
         with:
           name: native-candidates
@@ -247,9 +253,14 @@ jobs:
         env:
           NODE_OPTIONS: --openssl-legacy-provider
         run: npm run build:android
+      - name: Install Maestro
+        run: |
+          export MAESTRO_VERSION=2.7.0
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
       - name: Enable KVM
         run: sudo chmod 666 /dev/kvm
-      - name: Attempt minimum Android native build
+      - name: Run minimum Android build and Maestro flow
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -258,26 +269,16 @@ jobs:
           profile: pixel_2
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
-          script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/minimum --skip-build --skip-maestro
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Install Maestro
-        run: |
-          export MAESTRO_VERSION=2.7.0
-          curl -fsSL https://get.maestro.mobile.dev | bash
-          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
-      - name: Run minimum Android Maestro flow
-        run: |
-          export PATH="$HOME/.maestro/bin:$PATH"
-          maestro --device auto test .tmp/native/fixtures/minimum/.native/native-outside.yaml
+          script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/minimum --skip-build --android-gradle-java-home "${{ steps.legacy-java.outputs.path }}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: native-minimum-android-evidence
-          path: .tmp/native/fixtures/minimum/.native-resolution.json
+          path: |
+            .tmp/native/fixtures/minimum/.native-resolution.json
+            ~/.maestro/tests
           if-no-files-found: ignore
+          include-hidden-files: true
 
   minimum-ios:
     name: Minimum iOS feasibility
@@ -360,6 +361,8 @@ jobs:
             fi
             if [ "$PROFILE" = minimum ] || [ "$PROFILE" = all ]; then
               echo "- Minimum profile is exploratory only; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1."
+            elif [ "$PROFILE" = minimum-android ]; then
+              echo "- Minimum Android-only probe is exploratory; RN 0.59.10 remains peer-contract blocked because react-native-outside declares react-native >=0.82.1. Minimum iOS is skipped."
             else
               echo "- Minimum profile skipped intentionally (profile=$PROFILE)."
             fi
@@ -372,6 +375,8 @@ jobs:
           elif [ "$PROFILE" = minimum ]; then
             test "$MINIMUM_ANDROID" = success
             test "$MINIMUM_IOS" = success
+          elif [ "$PROFILE" = minimum-android ]; then
+            test "$MINIMUM_ANDROID" = success
           elif [ "$PROFILE" = all ]; then
             test "$CURRENT_ANDROID" = success
             test "$CURRENT_IOS" = success

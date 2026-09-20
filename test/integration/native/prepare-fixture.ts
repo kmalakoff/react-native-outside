@@ -64,6 +64,7 @@ cpSync(sourceProject, fixture, {
       .split(sep)
       .some((segment) => excludedSegments.has(segment)),
 });
+if (profile === 'minimum') mkdirSync(join(fixture, 'android/app/src/main/assets'), { recursive: true });
 
 const appTsx = join(fixture, 'App.tsx');
 const appJs = join(fixture, 'App.js');

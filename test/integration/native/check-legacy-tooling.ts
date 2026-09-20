@@ -15,11 +15,11 @@ const preset = version('metro-react-native-babel-preset');
 const transformer = version('metro-react-native-babel-transformer');
 const register = version('metro-babel-register');
 if (!babel.startsWith('7.')) throw new Error(`RN 0.59 requires Babel 7, got ${babel}`);
-for (const [name, actual] of [
-  ['metro-react-native-babel-preset', preset],
-  ['metro-react-native-babel-transformer', transformer],
-  ['metro-babel-register', register],
+for (const [name, actual, expected] of [
+  ['metro-react-native-babel-preset', preset, '0.51.1'],
+  ['metro-react-native-babel-transformer', transformer, '0.51.0'],
+  ['metro-babel-register', register, '0.51.0'],
 ]) {
-  if (actual !== '0.51.0') throw new Error(`${name} must resolve to 0.51.0 for RN 0.59.10, got ${actual}`);
+  if (actual !== expected) throw new Error(`${name} must resolve to ${expected} for RN 0.59.10, got ${actual}`);
 }
 console.log(JSON.stringify({ babel, preset, transformer, register }));

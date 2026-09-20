@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { delimiter, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
@@ -8,6 +8,7 @@ const { values } = parseArgs({
     platform: { type: 'string' },
     fixture: { type: 'string' },
     flow: { type: 'string' },
+    'android-gradle-java-home': { type: 'string' },
     'skip-build': { type: 'boolean' },
     'skip-maestro': { type: 'boolean' },
   },
@@ -18,6 +19,7 @@ const fixture = resolve(values.fixture);
 if (!existsSync(join(fixture, 'package.json'))) throw new Error(`Fixture does not exist: ${fixture}`);
 const flow = resolve(values.flow ?? join(fixture, '.native/native-outside.yaml'));
 const simulator = process.env.SIMULATOR_UDID;
+const androidGradleJavaHome = values['android-gradle-java-home']?.trim();
 
 function run(command: string, args: string[], cwd: string, env = process.env): void {
   const result = spawnSync(command, args, { cwd, env, stdio: 'inherit' });
@@ -50,13 +52,29 @@ function resolveAndroidDevice(): string {
 if (!platform || !['android', 'ios'].includes(platform)) throw new Error('Pass --platform android or ios');
 const app = JSON.parse(readFileSync(join(fixture, 'app.json'), 'utf8')) as { name: string; android: { package: string }; ios: { bundleIdentifier: string } };
 
-if (!values['skip-build']) run('npm', ['run', platform === 'android' ? 'build:android' : 'build:ios'], fixture);
+if (androidGradleJavaHome && platform !== 'android') throw new Error('--android-gradle-java-home is only supported for Android');
+if (androidGradleJavaHome) {
+  const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
+  if (!existsSync(join(androidGradleJavaHome, 'bin', javaExecutable))) {
+    throw new Error(`Java executable not found under --android-gradle-java-home ${androidGradleJavaHome}`);
+  }
+}
+
+if (!values['skip-build']) {
+  run('npm', ['run', platform === 'android' ? 'build:android' : 'build:ios'], fixture);
+}
 
 if (platform === 'android') {
   const device = resolveAndroidDevice();
-  const environment = { ...process.env, ANDROID_SERIAL: device };
-  run('npm', ['run', 'android', '--', '--no-packager', '--appId', app.android.package], fixture, environment);
-  if (!values['skip-maestro']) run('maestro', ['--device', device, 'test', flow], fixture, environment);
+  const androidEnvironment = { ...process.env, ANDROID_SERIAL: device };
+  const installEnvironment: NodeJS.ProcessEnv = { ...androidEnvironment };
+  if (androidGradleJavaHome) {
+    // RN 0.59 uses Gradle 5.4.1, so limit Java 8 to build/install. Emulator setup and Maestro use the default Java 17.
+    installEnvironment.JAVA_HOME = androidGradleJavaHome;
+    installEnvironment.PATH = `${join(androidGradleJavaHome, 'bin')}${delimiter}${installEnvironment.PATH ?? ''}`;
+  }
+  run('npm', ['run', 'android', '--', '--no-packager', '--appId', app.android.package], fixture, installEnvironment);
+  if (!values['skip-maestro']) run('maestro', ['--device', device, 'test', flow], fixture, androidEnvironment);
 } else {
   if (!simulator) throw new Error('SIMULATOR_UDID is required for iOS');
   if (existsSync(join(fixture, 'ios/Podfile'))) run('pod', ['install', '--project-directory=ios'], fixture);

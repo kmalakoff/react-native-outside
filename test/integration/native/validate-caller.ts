@@ -16,7 +16,9 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-if (profile !== 'current' && profile !== 'minimum' && profile !== 'all') fail(`Unsupported native profile: ${profile}`);
+if (profile !== 'current' && profile !== 'minimum' && profile !== 'minimum-android' && profile !== 'all') {
+  fail(`Unsupported native profile: ${profile}`);
+}
 
 if (!packageName || !knownPackages.has(packageName)) fail(`Unknown native candidate package: ${packageName ?? '<missing>'}`);
 const canonicalRepository = `kmalakoff/${packageName}`;
