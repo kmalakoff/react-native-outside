@@ -1,0 +1,18 @@
+{
+  "inside-button": "^Inside$",
+  "outside-button": "^Outside$",
+  "update-button": "^Update handler$",
+  "toggle-button": "^(Disable|Enable) handler$",
+  "event-complete": "^Continue to containment tests$",
+  "contains-event": "^Contains event target$",
+  "contains-outside-event": "^Contains outside$",
+  "contains-complete": "^Continue to outside tests$",
+  "active-toggle": "^Toggle active component$",
+  "active-inside": "^Inside active component$",
+  "outside": "^Outside$",
+  "boundary-toggle": "^Toggle boundary component$",
+  "boundary-inside": "^Inside boundary component$",
+  "registered-portal": "^Registered portal$",
+  "boundary-cleanup": "^Clean registered portal$",
+  "unrelated-portal": "^Unrelated portal$"
+}

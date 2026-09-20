@@ -86,7 +86,17 @@ const app = JSON.parse(readFileSync(join(fixture, 'app.json'), 'utf8')) as { and
 if (!app.android?.package) throw new Error(`Native fixture ${profile} has no Android package identifier`);
 const sharedFlow = readFileSync(join(repository, 'test/native/shared/native-outside.yaml'), 'utf8');
 if (!/^appId:\s+\S+$/m.test(sharedFlow)) throw new Error('Shared native flow is missing its appId');
-writeFileSync(join(fixture, '.native/native-outside.yaml'), sharedFlow.replace(/^appId:\s+\S+$/m, `appId: ${app.android.package}`));
+let flow = sharedFlow.replace(/^appId:\s+\S+$/m, `appId: ${app.android.package}`);
+if (profile === 'minimum') {
+  // RN 0.59 does not expose testID as an Android resource ID; select the same controls by visible labels.
+  const selectors = JSON.parse(readFileSync(join(sourceProject, 'selectors.json'), 'utf8')) as Record<string, string>;
+  flow = flow.replace(/^ {4}id: (\S+)$/gm, (_, id: string) => {
+    const label = selectors[id];
+    if (!label) throw new Error(`Missing legacy native selector for ${id}`);
+    return `    text: ${JSON.stringify(label)}`;
+  });
+}
+writeFileSync(join(fixture, '.native/native-outside.yaml'), flow);
 
 run('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund', ...(profile === 'minimum' ? ['--legacy-peer-deps'] : [])], fixture);
 const tarballs = manifest.packages.map((candidate) => join(packageDirectory, candidate.tarball));
