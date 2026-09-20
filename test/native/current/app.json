@@ -1,0 +1,26 @@
+{
+  "name": "OutsideSmoke",
+  "displayName": "OutsideSmoke",
+  "components": [
+    {
+      "appKey": "OutsideSmoke",
+      "displayName": "OutsideSmoke"
+    }
+  ],
+  "ios": {
+    "bundleIdentifier": "com.reactnativeoutside.smoke"
+  },
+  "android": {
+    "package": "com.reactnativeoutside.smoke"
+  },
+  "resources": {
+    "ios": [
+      "dist/assets",
+      "dist/main.ios.jsbundle"
+    ],
+    "android": [
+      "dist/res",
+      "dist/main.android.jsbundle"
+    ]
+  }
+}

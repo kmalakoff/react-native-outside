@@ -1,0 +1,9 @@
+{
+  "name": "minimum",
+  "template": "react-native@0.59.10",
+  "react": "16.8.3",
+  "reactNative": "0.59.10",
+  "architecture": "paper",
+  "peerContract": "blocked by react-native-outside >=0.82.1",
+  "status": "exploratory"
+}
