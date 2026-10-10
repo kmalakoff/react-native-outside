@@ -1,7 +1,7 @@
 {
   "extends": ["tsds-config/biome.json"],
   "files": {
-    "includes": ["!dist", "!node_modules", "!.git", "!docs", "!examples", "!assets", "!.tmp", "!.vscode", "!test/data", "!test/native"]
+    "includes": ["!dist", "!node_modules", "!.git", "!.agents", "!.archive", "!.worktrees", "!docs", "!examples", "!assets", "!.tmp", "!.vscode", "!test/data", "!test/native"]
   },
   "javascript": {
     "jsxRuntime": "reactClassic"
