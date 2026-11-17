@@ -24,7 +24,7 @@ on:
       native_candidate_manifest:
         description: Optional full native candidate manifest JSON for a coordinated canonical manual run
         type: string
-        default: ''
+        default: ""
 jobs:
   test:
     name: Node.js ${{ matrix.os }}
