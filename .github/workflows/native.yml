@@ -106,7 +106,7 @@ jobs:
           CALLER_REPOSITORY: ${{ github.repository }}
           CALLER_SHA: ${{ github.sha }}
         run: node test/integration/native/package-candidates.ts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: native-candidates
           path: |
@@ -129,11 +129,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: native-candidates
           path: .tmp/native
@@ -160,7 +160,7 @@ jobs:
           script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/current
       - name: Upload Android diagnostics
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-current-android-diagnostics
           path: |
@@ -182,11 +182,11 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: native-candidates
           path: .tmp/native
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -212,7 +212,7 @@ jobs:
           node test/integration/native/run-platform.ts --platform ios --fixture .tmp/native/fixtures/current
       - name: Upload iOS diagnostics
         if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-current-ios-diagnostics
           path: |
@@ -235,17 +235,17 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         id: legacy-java
         with:
           distribution: temurin
           java-version: "8"
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         id: current-java
         with:
           distribution: temurin
           java-version: "17"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: native-candidates
           path: .tmp/native
@@ -279,7 +279,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           disable-animations: true
           script: node test/integration/native/run-platform.ts --platform android --fixture .tmp/native/fixtures/minimum --skip-build --android-gradle-java-home "${{ steps.legacy-java.outputs.path }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-minimum-android-evidence
@@ -303,7 +303,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 26
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: native-candidates
           path: .tmp/native
@@ -332,7 +332,7 @@ jobs:
         run: |
           export PATH="$HOME/.maestro/bin:$PATH"
           node test/integration/native/run-platform.ts --platform ios --fixture .tmp/native/fixtures/minimum --legacy-ios-xcode-compat --skip-build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-minimum-ios-evidence
